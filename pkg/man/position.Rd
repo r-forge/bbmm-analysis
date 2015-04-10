@@ -38,11 +38,9 @@ An array indexed by ID, parameter name, time.
 \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 	
-position(tr, as.POSIXct(c("2011-01-19 08:30:00")))
+position(monkey.tr, as.POSIXct(c("2011-01-19 08:30:00")))
 
 # , , 1295422200
 #

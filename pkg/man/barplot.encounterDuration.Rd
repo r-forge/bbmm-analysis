@@ -28,11 +28,9 @@ Otherwise, you may specify the labels yourself in the row names of \code{height}
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 	
-ed <- encounterDuration(tr, 100, byburst=TRUE)
+ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
 barplot(ed)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

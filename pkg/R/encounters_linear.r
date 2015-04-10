@@ -28,9 +28,9 @@
 		attributes(data) <- list(id=attr(burst, 'id'), nloc=nrow(burst))
 		data
 	})
-	names(tr.data) <- burst(tr)
+	names(tr.data) <- adehabitatLT::burst(tr)
 	
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 	emptyMatrix <- matrix(NA, nrow=2, ncol=0)
 	rownames(emptyMatrix) <- c("start", "end")
 	

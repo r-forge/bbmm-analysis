@@ -17,9 +17,18 @@
 	nu * cos(beta) / sqrt(2 * pi) * exp(-0.5*(nu * sin(beta))^2) * pnorm(nu * cos(beta))
 }
 
-#"pdirection" <- function(d, tr, time, time.scale=NA) {
-#	.direction_statistic(tr, time, time.scale, d, lmomco::cdfrice)
-#}
+"pdirection" <- function(d, tr, time, time.scale=NA, lower=0) {
+	.direction_statistic(tr, time, time.scale, d,
+			function(alpha, nu, theta) { .direction_cdf(alpha, nu, theta, lower) })
+}
+
+".direction_cdf" <- function(alpha, nu, theta, lower=0) {
+	res <- sapply(alpha, function(a) {
+		integrate(function(x) { .direction_pdf(x, nu, theta) }, lower, a)
+	})
+	
+	unlist(res["value",])
+}
 
 #"qdirection" <- function(p, tr, time, time.scale=NA) {
 #	.direction_statistic(tr, time, time.scale, p, lmomco::quarice)
@@ -38,7 +47,7 @@
 		}
 	}
 
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 	
 	tr <- na.omit(tr) # This function does not like missing values
 		
@@ -56,6 +65,8 @@
 			theta <- atan2(params[i,'y'], params[i,'x'])
 			
 			if (all(!is.na(c(nu, theta)))) {
+			#print(value)
+			#print(do.call(fn, list(value, nu, theta)))
 				res[i,] <- do.call(fn, list(value, nu, theta))
 			} else {
 				res[i,] <- NA

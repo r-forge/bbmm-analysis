@@ -13,7 +13,7 @@ velocity <- function(tr, time, time.scale=NA) {
 		}
 	}
 	
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 
 	res <- sapply(time, function(t) {
 		t.s <- t - time.scale/2
@@ -55,13 +55,10 @@ velocity <- function(tr, time, time.scale=NA) {
 			# the variance is computed differently
 			if (attr(b.s, 'burst') == attr(b.e, 'burst') && j.s == j.e) {
 				# t.s and t.e are in the same bridge
-				# See Section 2.2 of Kevin Buchin, Stef Sijben,
-				# T. Jean Marie Arseneau,and Erik P. Willems. 2012. 
-				# Detecting movement patterns using Brownian bridges.
-				# TODO: Update reference, the above one has an error
+				# See .... TODO: Add reference when available
 				dt <- b.s$dt[j.s-1]
-				res[i,3] <- (sum(b.s$loc.var[c(j.s-1,j.s)]) / dt^2
-						- dt * (t.e - t.s - dt) / (t.e - t.s)^3)
+				res[i,3] <- sum(b.s$loc.var[c(j.s-1,j.s)]) / dt^2 +
+					(1 / (t.e-t.s) - 1 / dt) * b.s$diff.coeff[j.s-1]
 			} else if (attr(b.s, 'burst') == attr(b.e, 'burst') && j.s == j.e-1) {
 				# t.s and t.e are in consecutive bridges of one burst
 				# See .... TODO: Add reference when available
@@ -71,7 +68,7 @@ velocity <- function(tr, time, time.scale=NA) {
 							* b.s$loc.var[j.s])
 						) / (t.e-t.s)^2
 			} else {
-				# t.s and t.e are spaced further apart, treat as independent
+				# t.s and t.e are further apart in time, treat as independent
 				res[i,3] <- (p.e[id,'var'] + p.s[id,'var']) / (t.e-t.s)^2
 			}
 		}

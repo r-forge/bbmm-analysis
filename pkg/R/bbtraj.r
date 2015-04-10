@@ -214,15 +214,21 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	
 		# Don't bother recomputing everything if we don't delete any rows
 		if (all(filter)) { return(burst) }
-		
 		newBurst <- .bbtraj.extra.info(burst[filter,], slsp)
 		rn <- split(rownames(burst), filter)
 		rownames(newBurst) <- rn$`TRUE`
 		
 		# Store the information about the removed rows
-		rm.rows <- rn$`FALSE`
-		names(rm.rows) <- rn$`FALSE`
-		attr(rm.rows, "class") <- "omit"
+		rm.rows <- burst[!filter, c('x','y','diff.coeff','loc.var','date')]
+		class(rm.rows) <- c("omit", "data.frame")
+		
+		# Divide the infolocs over the kept and removed rows
+		if (!is.null(attr(burst, 'infolocs'))) {
+			infolocs <- split(attr(burst, 'infolocs'), filter)
+			attr(newBurst, 'infolocs') <- infolocs$`TRUE`
+			attr(rm.rows, "infolocs") <- infolocs$`FALSE`
+		}
+		
 		attr(newBurst, "na.action") <- rm.rows
 		return(newBurst)
 	})
@@ -234,6 +240,10 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	return(trNew)
 }
 "bbFilterNA" <- na.omit.bbtraj # Keep this one for backwards compatibility
+
+"split.bbtraj" <- function(x, f=as.factor(sapply(x, function(b) { attr(b, "id") })), drop = FALSE, ...) {
+	split.default(x, f, drop, ...)
+}
 
 summary.bbtraj <- function(object, ..., units.direction="radian") {
 	if (!inherits(object, "bbtraj"))

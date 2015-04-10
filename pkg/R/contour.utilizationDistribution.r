@@ -1,16 +1,9 @@
 contour.utilizationDistribution <- function (x, levels=0.99, col=hcl(1:length(x) * 360/length(x), l=35),
 		xlim=NULL, ylim=NULL, labels=levels, add=FALSE, ...) {
-	if (inherits(x[[1]], "asc")) {
-		coords <- sapply(x, adehabitat::getXYcoords)
-		xc <- coords['x',1][[1]]
-		yc <- coords['y',1][[1]]
-	} else {
-		xc <- as.double(rownames(x[[1]]))
-		yc <- as.double(colnames(x[[1]]))
-	}
+	coords <- .UD.coords(x)
 	
-	if (is.null(xlim)) { xlim <- range(xc) }
-	if (is.null(ylim)) { ylim <- range(yc) }
+	if (is.null(xlim)) { xlim <- range(coords$x) }
+	if (is.null(ylim)) { ylim <- range(coords$y) }
 		
 	if (!inherits(x, "utilizationDistribution"))
         stop("x should be an object of class utilizationDistribution")
@@ -23,9 +16,30 @@ contour.utilizationDistribution <- function (x, levels=0.99, col=hcl(1:length(x)
 		# Find the requested levels
 		alphaLevel <- .UD.alphaLevels(x[[i]])
 
-		contour(xc, yc, alphaLevel, levels=levels,
+		contour(coords$x, coords$y, alphaLevel, levels=levels,
 				labels=labels, add=TRUE, col=col[i], ...)
 	}
+}
+
+contourPolygons <- function(ud, levels=0.99) {
+	if (!inherits(ud, "utilizationDistribution")) {
+		stop("ud must be of class utilizationDistribution")
+	}
+	
+	coords <- .UD.coords(ud)
+	lapply(ud, function(r) {
+		lines <- contourLines(coords$x, coords$y, .UD.alphaLevels(r), levels=levels)
+		# Get a separate list of line segments for each level
+		lines <- split(lines, as.factor(sapply(lines, "[[", "level")))
+		
+		# The result is a SpatialPolygons object with one set of Polygons for each level
+		SpatialPolygons(lapply(lines, function(ls) {
+			ps <- Polygons(lapply(ls, function(c) {
+				Polygon(cbind(c$x, c$y))
+			}), ls[[1]]$level)
+			maptools::checkPolygonsHoles(ps)
+		}))
+	})
 }
 
 # Given a matrix representing a UD, compute for each cell the minimum alpha level for which it would be inside the contour
@@ -42,4 +56,19 @@ contour.utilizationDistribution <- function (x, levels=0.99, col=hcl(1:length(x)
 	
 	# Reassemble the matrix of alpha values
 	matrix(alphaLevel, nrow(ud), ncol(ud))
+}
+
+".UD.coords" <- function(ud) {
+	if (inherits(ud[[1]], "asc")) {
+		return(adehabitat::getXYcoords(ud[[1]]))
+	} else {
+		xc <- as.double(rownames(ud[[1]]))
+		yc <- as.double(colnames(ud[[1]]))
+		
+		if (!is.null(xc) && !is.null(yc)) {
+			return(list(x=xc, y=yc))
+		}
+	}
+	
+	list(x=seq(0,1,length.out=nrow(ud[[1]])), y=seq(0,1,length.out=ncol(ud[[1]])))
 }

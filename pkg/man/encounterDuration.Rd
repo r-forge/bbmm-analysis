@@ -60,17 +60,15 @@ the two IDs and the movement model. The entries in the array are again of class
 \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
-	
-ed <- encounterDuration(tr, 100, byburst=TRUE)
+data("vervet_monkeys", package="movementAnalysis")
+
+ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
 barplot(ed)
 
 barplot(encounterDurationById(ed))
 
 # This one has the same result, but needs to recompute everything
-barplot(encounterDuration(tr, 100))
+barplot(encounterDuration(monkey.tr, 100))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

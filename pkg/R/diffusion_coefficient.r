@@ -1,9 +1,9 @@
 "diffusionCoefficient" <- function (tr, byburst = FALSE, nsteps = 1000) {
 	tr <- na.omit(tr)
 
-	resultNames <- unique(id(tr))
+	resultNames <- unique(adehabitatLT::id(tr))
 	if (byburst) {
-		resultNames <- burst(tr)
+		resultNames <- adehabitatLT::burst(tr)
 	}
 	
 	inputData <- list()
@@ -72,9 +72,9 @@
 "diffusionCoefficient.new" <- function (tr, byburst = FALSE, nsteps = 1000) {
 	tr <- na.omit(tr)
 
-	resultNames <- unique(id(tr))
+	resultNames <- unique(adehabitatLT::id(tr))
 	if (byburst) {
-		resultNames <- burst(tr)
+		resultNames <- adehabitatLT::burst(tr)
 	}
 	
 	inputData <- list()

@@ -1,4 +1,4 @@
-\name{as.bbtraj}
+\name{bbtraj}
 \alias{as.bbtraj}
 \alias{bbtraj}
 \alias{diffusionCoefficient}
@@ -9,10 +9,11 @@
 \alias{bbFilterNA}
 %\alias{print.bbtraj}
 \alias{summary.bbtraj}
+\alias{split.bbtraj}
 \docType{data}
 \title{
 %%   ~~ data name/kind ... ~~
-Working with Trajectories in 2D Space: the Class bbtraj
+Class for storing Brownian bridge trajectories
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of the dataset. ~~
@@ -24,8 +25,9 @@ as.bbtraj(xys, date, id, burst = id, typeII = TRUE,
           slsp =  c("remove", "missing"),
           infolocs = data.frame(pkey = paste(id, date, sep=".")),
           make.regular=FALSE)
-\method{na.omit}{bbtraj}(object, slsp=c("remove", "missing"), ...)
 diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
+\method{na.omit}{bbtraj}(object, slsp=c("remove", "missing"), ...)
+\method{split}{bbtraj}(x, f=as.factor(sapply(x, function(b) { attr(b, "id") })), drop = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -47,11 +49,14 @@ diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
     turning angles (for details, see \code{\link{as.ltraj}})}
   \item{infolocs}{ If not \code{NULL}, a data.frame containing extra information about the relocations.}
   \item{make.regular}{Either \code{FALSE}, or a list specifying the arguments to \code{\link{setNA}} and \code{\link{sett0}}.}
-  \item{object}{The trajectory from which to filter missing values.}
-  \item{...}{Further arguments that might be required by specialized methods.}
   \item{tr}{A trajectory of class \code{ltraj} or \code{bbtraj}}
   \item{byburst}{A logical indicating whether a different diffusion coefficient should be estimated for each burst.}
   \item{nsteps}{The number of different values for the diffusion coefficient to test. The range in which the value can be is determined automatically.}
+  \item{object}{The trajectory from which to filter missing values.}
+  \item{...}{Further arguments that might be required by specialized methods.}
+  \item{x}{The trajectory to split.}
+  \item{f}{A factor providing the destination group for each burst.}
+  \item{drop}{Logical indicating if levels that do not occur should be dropped.}
 }
 \details{
 If \code{make.regular} is not \code{FALSE}, it must be a list containing parameters
@@ -109,19 +114,19 @@ using Brownian bridges. \emph{Ecology 88}, 9 (2007), 2354--2363.
 \code{\link[adehabitatLT]{ltraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-example_data
+data("vervet_monkeys", package="movementAnalysis")
+monkey.data
 
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-    date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+tr <- as.bbtraj(data.frame(x=monkey.data$X, y=monkey.data$Y, var=monkey.data$StdDev^2),
+	date=monkey.data$DateTime, id=monkey.data$GroupID, burst=monkey.data$GroupDayNo)
 tr
 is.regular(tr)
 
 # Now, make the trajectory regular while constructing it
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-    date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo,
+tr.reg <- as.bbtraj(data.frame(x=monkey.data$X, y=monkey.data$Y, var=monkey.data$StdDev^2),
+	date=monkey.data$DateTime, id=monkey.data$GroupID, burst=monkey.data$GroupDayNo,
     make.regular=list(date.ref=strptime("00:00", "\%H:\%M"), dt=1, units="hour"))
-is.regular(tr)
+is.regular(tr.reg)
 
 # Extract a single burst from the trajectory
 tr[["BD_1417"]]

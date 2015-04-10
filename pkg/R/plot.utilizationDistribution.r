@@ -30,7 +30,7 @@ plot.utilizationDistribution <- function (x, col=hcl(1:length(x) * 360/length(x)
 	}
 	for (i in 1:length(x)) {
 		u <- x[[i]]
-		if (max(u) > 0) {
+		if (max(u, na.rm=TRUE) > 0) {
 			image(xc, yc, unclass(u), col=col[[i]], add=T)
 		}
 	}

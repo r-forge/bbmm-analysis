@@ -6,7 +6,7 @@ position <- function(tr, time) {
 		time <- as.double(time)
 	}
 	
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 
 	res <- sapply(time, function(t) {
 	
@@ -15,7 +15,7 @@ position <- function(tr, time) {
 			b$date[1] <= t && b$date[nrow(b)] >= t
 		}))]
 
-		if (length(unique(id(tr))) != length(tr))
+		if (length(unique(adehabitatLT::id(tr))) > length(tr))
 			stop("Multiple bursts contain requested time for some ID")
 
 		res <- matrix(nrow=length(ids), ncol=3)

@@ -33,13 +33,11 @@ A vector containing the requested statistic for each burst, indexed by the burst
 \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
-djl(tr)
+djl(monkey.tr)
 
-displacement.direction(tr, units="compass")
+displacement.direction(monkey.tr, units="compass")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

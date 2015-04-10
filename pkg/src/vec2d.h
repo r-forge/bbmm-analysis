@@ -35,11 +35,11 @@ public:
 		return Vec2D<T>(s*x, s*y);
 	}
 	
-	friend Vec2D<T> operator*(T s, Vec2D<T> &v) {
+	friend Vec2D<T> operator*(T s, const Vec2D<T> &v) {
 		return Vec2D<T>(s*v.x, s*v.y);
 	}
 
-	Vec2D<T> &operator/(T s) {
+	Vec2D<T> operator/(T s) const {
 		return Vec2D<T>(x/s, y/s);
 	}
 

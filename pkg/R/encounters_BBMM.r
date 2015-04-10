@@ -11,7 +11,7 @@
 }
 
 ".distance_statistic" <- function(tr, time, value, fn, diagonal_value=NA) {
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 	
 	tr <- bbFilterNA(tr) # This function does not like missing values
 		

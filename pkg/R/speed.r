@@ -44,7 +44,7 @@
 		}
 	}
 
-	ids <- unique(id(tr))
+	ids <- unique(adehabitatLT::id(tr))
 	
 	tr <- na.omit(tr) # This function does not like missing values
 		

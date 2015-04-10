@@ -47,7 +47,7 @@
 
 #    # xlim is the limit of the graph
 #    if (is.null(xlim)) {
-#        idtt <- unique(id(x))
+#        idtt <- unique(adehabitatLT::id(x))
 #        oo <- lapply(idtt,
 #                     function(i) unlist(lapply(x[id=i], function(j) j$x)))
 #        maxxl <- max(unlist(lapply(oo, function(kk) diff(range(kk)))))
@@ -57,7 +57,7 @@
 #    }
 
 #    if (is.null(ylim)) {
-#        idtt <- unique(id(x))
+#        idtt <- unique(adehabitatLT::id(x))
 #        oo <- lapply(idtt,
 #                     function(i) unlist(lapply(x[id=i], function(j) j$y)))
 #        maxyl <- max(unlist(lapply(oo, function(kk) diff(range(kk)))))

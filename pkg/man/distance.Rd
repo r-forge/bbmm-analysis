@@ -64,22 +64,20 @@ the value of \code{d} or \code{p} and the time.
 \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
 # Compute the distance at two distinct times
-distance(tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+distance(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 
 # See whether an encounter occurs at the 50m or 100m thesholds
-encounter(c(10, 100), tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+encounter(c(10, 100), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 
 # Compute when there are encounters
-ei <- encounterIntervals(100, tr)
+ei <- encounterIntervals(100, monkey.tr)
 ei[["BD","NH"]]
 
 # Compute the 5th and 95th percentile of the distance at two distinct times
-qdistance(c(0.05, 0.95), tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+qdistance(c(0.05, 0.95), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

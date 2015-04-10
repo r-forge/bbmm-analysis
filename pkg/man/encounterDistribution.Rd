@@ -63,19 +63,17 @@ specify a sufficiently small grid or use a larger time step.
 There seems to be some problem with the result being transposed, this needs further investigation. Until then, you can plot the transpose of the result using \code{image(t(ud[["BD","NH"]]))}.
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
-# Define grid lines: equally spaced between the min and max coordinate in tr
-xlim <- range(unlist(sapply(tr, function(b) { b$x })), na.rm=TRUE)
+# Define grid lines: equally spaced between the min and max coordinate in monkey.tr
+xlim <- range(unlist(sapply(monkey.tr, function(b) { b$x })), na.rm=TRUE)
 xc <- seq(xlim[1], xlim[2], length.out=20)
 
-ylim <- range(unlist(sapply(tr, function(b) { b$y })), na.rm=TRUE)
+ylim <- range(unlist(sapply(monkey.tr, function(b) { b$y })), na.rm=TRUE)
 yc <- seq(ylim[1], ylim[2], length.out=20)
 
 # Compute the UD and plot the result for one ID
-ud <- encounterDistribution(tr, 100, xc=xc, yc=yc)
+ud <- encounterDistribution(monkey.tr, 100, xc=xc, yc=yc)
 image(ud[["BD","NH"]])
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

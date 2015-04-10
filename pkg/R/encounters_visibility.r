@@ -1,5 +1,5 @@
 #'encounter.visible' <- function(vis, tr, time) {
-#	ids <- unique(id(tr))
+#	ids <- unique(adehabitatLT::id(tr))
 #	
 #	tr <- bbFilterNA(tr) # This function does not like missing values
 #		

@@ -66,12 +66,10 @@ a matrix, indexed by the coordinates specified in \code{xc} and \code{yc}.
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
 # Compute the UD and plot the result
-ud <- utilizationDistribution(tr, byburst=TRUE)
+ud <- utilizationDistribution(monkey.tr, byburst=TRUE)
 plot(ud)
 
 # Convert to one UD for each group

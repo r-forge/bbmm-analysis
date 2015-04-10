@@ -26,20 +26,14 @@ Returns a three dimensional array indexed by ID in the trajectory, variable name
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\section{Warning}{
-    \bold{The definition of the velocity variance may still contain errors, leading to incorrect results. Use at your own risk.}
-}
-
 \seealso{
 \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
 # Compute the velocity distribution parameters over two half-hour intervals
-velocity(tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
+velocity(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -26,7 +26,7 @@ qspeed(p, tr, time, time.scale=NA)
   \item{p}{Vector of probabilities}
   \item{tr}{The trajectory object}
   \item{time}{Vector of times}
-  \item{time.scale}{The length of the intervals over which to report the direction}
+  \item{time.scale}{The length of the intervals over which to report the speed or direction}
 }
 \details{
 The speed at a time \eqn{t} is defined as the absolute value of the \code{\link{velocity}} over the time interval \eqn{[t-time.scale/2, t+time.scale/2]}.
@@ -38,24 +38,18 @@ The speed at a time \eqn{t} is defined as the absolute value of the \code{\link{
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\section{Warning}{
-    \bold{The definition of the velocity variance may still contain errors, leading to incorrect results. Use at your own risk.}
-}
-
 \seealso{
 \code{\link{velocity}}, \code{\link{bbtraj}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+data("vervet_monkeys", package="movementAnalysis")
 
 # Compute the (linear model) speed over two half-hour intervals
-v <- speed(tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
+v <- speed(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
 v
 
 # Compute the density of four speeds over the same time intervals
-dspeed(v, tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
+dspeed(v, monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

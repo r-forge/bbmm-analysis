@@ -30,33 +30,20 @@ If \code{col} is a vector, it is assumed to contain a colour code for each grid 
 If \code{col} is a list, it is assumed to contain one element for each UD to plot, specifying exactly which colours to use in that plot.
 }
 %\value{
-%%%  ~Describe the value returned
-%%%  If it is a LIST, use
-%%%  \item{comp1 }{Description of 'comp1'}
-%%%  \item{comp2 }{Description of 'comp2'}
-%%% ...
+%
 %}
 
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{utilizationDistribution}}
+\code{\link{utilizationDistribution}}, \code{\link{SpatialPolygons}}
 }
 \examples{
-data("example_data", package="movementAnalysis")
-tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
-
-# Define grid lines: equally spaced between the min and max coordinate in tr
-xlim <- range(unlist(sapply(tr, function(b) { b$x })), na.rm=TRUE)
-xc <- seq(xlim[1], xlim[2], length.out=100)
-
-ylim <- range(unlist(sapply(tr, function(b) { b$y })), na.rm=TRUE)
-yc <- seq(ylim[1], ylim[2], length.out=100)
+data("vervet_monkeys", package="movementAnalysis")
 
 # Compute the UD and plot the result for one ID
-ud <- utilizationDistribution(tr, xc=xc, yc=yc)
+ud <- utilizationDistribution(monkey.tr)
 plot(ud)
 
 # Specify nicer colours

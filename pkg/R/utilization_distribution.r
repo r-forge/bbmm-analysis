@@ -3,7 +3,7 @@
 	if (!inherits(x, "utilizationDistribution"))
 		stop("x should be of class \"utilizationDistribution\"")
 	
-	ud <- NextMethod("[[") # use the selection operator from ltraj to select the right bursts
+	ud <- NextMethod("[[") # use the default list selection operator to extract the requested element
 
 	# If a UD was previously filtered, restore it again before extracting from the result set
 	cutoff <- attr(ud, "cutoff")
@@ -50,38 +50,46 @@
 	# For each timestep, compute the mean location, variance, and a weighing factor
 	for (id in names(timeSteps)) {
 		ts <- timeSteps[[id]]
-	
-		pad <- rep(0, 15)
-			
-		cResult <- .OpenCL("utilizationDistribution", length(xc)*length(yc),
-				as.integer(nrow(ts)),
-				as.double(c(ts[,1],pad)), as.double(c(ts[,2],pad)), as.double(c(ts[,3],pad+1)), as.double(c(ts[,4],pad)), 
-				as.double(xc), as.double(yc), as.integer(length(yc)), as.integer(length(xc)))
 
-		res <- matrix(cResult, nrow=length(xc), byrow=TRUE)
-		
-		if (!is.null(grid)) {
-			attributes(res) <- attributes(grid)
-		} else {
-			rownames(res) <- xc
-			colnames(res) <- yc
+		gxc <- xc
+		gyc <- yc
+		if (cutoff.level < 1) {
+			# Find a box that is guaranteed to contain the requested contour.
+			# The bounding box containing the cutoff.level contour for every time step
+			# is guaranteed to contain this contour for the whole trajectory.
+			vDiff <- sqrt(ts[,'var'] * -2 * log(1-cutoff.level))
+			gRows <- which(xc >= min(ts[,'x'] - vDiff) & xc <= max(ts[,'x'] + vDiff))
+			gxc <- xc[gRows]
+			gCols <- which(yc >= min(ts[,'y'] - vDiff) & yc <= max(ts[,'y'] + vDiff))
+			gyc <- yc[gCols]
 		}
 		
-		# Keep only the most interesting parts of the result to save memory
-		if (cutoff.level < 1) {
-			levels <- .UD.alphaLevels(res)
-			# Find the smallest bounding box that contains all interesting values
-			rows <- range(which(apply(levels, 1, function(r) { any(r <= cutoff.level) })))
-			cols <- range(which(apply(levels, 2, function(c) { any(c <= cutoff.level) })))
+		pad <- rep(0, 15)
 			
-			attrs <- attributes(res)
-			res <- res[rows[1]:rows[2],cols[1]:cols[2]]
-			# Remember the original dimensions of the result and where the cut-out box fits in
-			attrs$cutoff <- list(rows=rows, cols=cols, dim=attrs$dim, dimnames=attrs$dimnames)
-			attrs$dim <- dim(res)
-			attrs$dimnames <- NULL
+		cResult <- .OpenCL("utilizationDistribution", length(gxc)*length(gyc),
+				as.integer(nrow(ts)),
+				as.double(c(ts[,1],pad)), as.double(c(ts[,2],pad)), as.double(c(ts[,3],pad+1)), as.double(c(ts[,4],pad)), 
+				as.double(gxc), as.double(gyc), as.integer(length(gyc)), as.integer(length(gxc)))
 
+		res <- matrix(cResult, nrow=length(gxc), byrow=TRUE)
+		
+		if (!is.null(grid)) {
+			attrs <- attributes(grid)
+			attrs$dim <- attr(res, 'dim')
 			attributes(res) <- attrs
+		} else {
+			rownames(res) <- gxc
+			colnames(res) <- gyc
+		}
+		
+		if (cutoff.level < 1) {
+			# Remember the original dimensions of the requested grid and where the cut-out box fits in
+			attr(res, 'cutoff') <- list(
+					rows=range(gRows), 
+					cols=range(gCols), 
+					dim=c(length(xc),length(yc)), 
+					dimnames=(if (is.null(grid)) list(xc, yc) else NULL)
+			)
 		}
 		
 		UDs[[id]] <- res
@@ -100,7 +108,7 @@
 	}
 	groups <- split(ud, attr(ud, "id"))
 	
-	UDs <- lapply(groups, function(g) { 
+	UDs <- lapply(groups, function(g) {
 		class(g) <- class(ud)
 		Reduce('+', g)
 	})
@@ -174,12 +182,13 @@
 
 ".UDtimesteps" <- function(tr, timestepSize=60, byburst=FALSE) {
 	if (byburst) {
-		names <- unique(burst(tr))
+		names <- unique(adehabitatLT::burst(tr))
 	} else {
-		names <- unique(id(tr))
+		names <- unique(adehabitatLT::id(tr))
 	}
-	print(names)
 	result <- list()
+	
+	tr <- na.omit(tr)
 	
 	for (name in names) {
 		if (byburst) {
@@ -189,8 +198,7 @@
 		}
 		result[[name]] <- do.call("rbind", lapply(bursts, function(burst) {
 				burst$t <- as.double(burst$date)
-				burst <- burst[!(is.na(burst$x) || is.na(burst$y) || is.na(burst$loc.var)),
-				               c("x","y","diff.coeff","loc.var","t")]
+				burst <- burst[,c("x","y","diff.coeff","loc.var","t")]
 				data <- c(t(burst)) # flatten into vector in row-major order
 				
 				# Align the time of each step to a multiple of timestepSize
@@ -199,7 +207,7 @@
 				
 				cResult <- .C("UDTimesteps", double(nsteps*4),
 						as.integer(nrow(burst)), as.double(data),
-						as.integer(nsteps), timeLimits)
+						as.integer(nsteps), as.double(timeLimits))
 				timeSteps <- matrix(cResult[[1]], ncol=4, byrow=T)
 				colnames(timeSteps) <- c('x', 'y', 'var', 'weight')
 				rownames(timeSteps) <- seq(timeLimits[1], timeLimits[2], length=nrow(timeSteps))
