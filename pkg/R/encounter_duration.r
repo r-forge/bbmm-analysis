@@ -25,6 +25,7 @@
 	
 	# We only have the part above the diagonal now, make the matrix symmetric
 	encounterMatrix <- encounterMatrix + aperm(encounterMatrix, c(2,1,3))
+	class(encounterMatrix) <- "encounterDuration"
 	encounterMatrix
 }
 
@@ -32,6 +33,7 @@
 {
 # If byburst, produces encounter duration for each pair of bursts that overlap in time
 # Else, produces encounter duration for each pair of distinct IDs
+	tr <- bbFilterNA(tr) # This function does not like missing values
 
 	# Allocate maximum-size data frame to collect the results in
 	n <- length(tr)
@@ -66,7 +68,9 @@
 	}
 	
 	if (byburst) {
-		result[1:resultSize,] # return only the filled in rows
+		result <- result[1:resultSize,] # return only the filled in rows
+		class(result) <- c("encounterDuration", "data.frame")
+		result
 	} else {
 		ids <- unique(sapply(tr, function(x) { attr(x, "id") }))
 		encounterDurationById(result[1:resultSize,], ids)
@@ -74,19 +78,16 @@
 }
 
 ".burstEncounterDuration" <- function (b1, b2, dist, timestepSize, model) {
-	useFields <- c("x","y","diff.coeff","loc.var","t")
-
 	implementations <- c(linear="encounterLinear", BBMM="encounterBBMM")
-
 	# serialize the fields we need from the bursts in row-major order
 	b1$t <- as.double(b1$date)
-	b1 <- b1[!is.na(b1$x), useFields]
+	b1 <- b1[!is.na(b1$x), c("x","y","diff.coeff","loc.var","t")]
 	b1 <- b1[!is.na(b1$y),]
 	b1 <- b1[!is.na(b1$loc.var),]
 	data1 <- c(t(b1)) # flatten into row-major vector
 	
 	b2$t <- as.double(b2$date)
-	b2 <- b2[!is.na(b2$x), useFields]
+	b2 <- b2[!is.na(b2$x), c("x","y","diff.coeff","loc.var","t")]
 	b2 <- b2[!is.na(b2$y),]
 	b2 <- b2[!is.na(b2$loc.var),]
 	data2 <- c(t(b2)) # flatten into row-major vector

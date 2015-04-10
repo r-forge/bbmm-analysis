@@ -62,29 +62,13 @@ data("example_data", package="movementAnalysis")
 tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
 	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
 	
-d <- encounterDuration(tr, 100, byburst=TRUE)
-d
+ed <- encounterDuration(tr, 100, byburst=TRUE)
+barplot(ed)
 
-#   id1 id2  burst1  burst2      BBMM    linear
-# 1  NH  BD NH_1416 BD_1416  4507.143  5420.426
-# 2  BD  NH BD_1417 NH_1417 11693.703 15058.015
+barplot(encounterDurationById(ed))
 
-encounterDurationById(d)
-
-# , , BBMM
-# 
-#          NH       BD
-# NH       NA 16200.85
-# BD 16200.85       NA
-
-# , , linear
-# 
-#          NH       BD
-# NH       NA 20478.44
-# BD 20478.44       NA
-
-encounterDuration(tr, 100)
-# Same result, but needs to recompute everything
+# This one has the same result, but needs to recompute everything
+barplot(encounterDuration(tr, 100))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

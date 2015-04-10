@@ -27,7 +27,7 @@
 	data2 <- c(t(b2)) # flatten into row-major vector
 
 
-	cResult <- .C("encounterLinear", double(1), as.double(threshold),
+	cResult <- .C("encounterLinearIntervals", double(1), as.double(threshold),
 			as.integer(nrow(b1)), as.double(data1),
 			as.integer(nrow(b2)), as.double(data2),
 			as.integer(0), double(2*(nrow(b1) + nrow(b2))), PACKAGE="movementAnalysis")

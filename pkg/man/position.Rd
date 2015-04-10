@@ -7,7 +7,7 @@ Evaluate position parameters at the given times
 \description{
 Given a trajectory of class \code{\link{bbtraj}} and a list of date/times
 (as timestamps or objects of class \code{\link{POSIXct}}), this function
-computes the distibution parameters of the position for each group in the
+computes the distribution parameters of the position for each group in the
 trajectory at each of the requested times. The distribution parameters are
 the mean location and the variance of the location.
 }

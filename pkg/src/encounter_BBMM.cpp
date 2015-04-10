@@ -13,28 +13,28 @@ void encounterBBMM(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
 		double *timestepSize) {
-	int n1 = *nloc1;
-	int n2 = *nloc2;
+	size_t n1 = (size_t)*nloc1;
+	size_t n2 = (size_t)*nloc2;
 	
 	// find the intersection of the time intervals described by the trajectories
 	double startTime = std::max(data1[0].t,    data2[0].t);
 	double endTime   = std::min(data1[n1-1].t, data2[n2-1].t);
 
-	off_t i = 1;
-	off_t j = 1;
+	size_t i = 1;
+	size_t j = 1;
 	
 	*result = 0.0;
 
 	// iterate over *nAlpha time intervals
 	for (double t = startTime; t <= endTime; t += *timestepSize) {
 		double alpha1 = (t-data1[i-1].t) / (data1[i].t - data1[i-1].t);
-		while (alpha1 > 1.0 && i < *nloc1) {
+		while (alpha1 > 1.0 && i < n1) {
 			i++;
 			alpha1 = (t-data1[i-1].t) / (data1[i].t - data1[i-1].t);
-		} 
+		}
 		
 		double alpha2 = (t-data2[j-1].t) / (data2[j].t - data2[j-1].t);
-		while (alpha2 > 1.0 && j < *nloc2) {
+		while (alpha2 > 1.0 && j < n2) {
 			j++;
 			alpha2 = (t-data2[j-1].t) / (data2[j].t - data2[j-1].t);
 		}

@@ -1,5 +1,18 @@
-"utilizationDistribution" <- function(tr, xc, yc, timestepSize=60)
+"utilizationDistribution" <- function(tr, grid=NULL, timestepSize=60, xc=NULL, yc=NULL)
 {
+	if (inherits(grid,"asc")) {
+		# extract the grid lines from the provided grid
+		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
+		yc <- seq(from=attr(grid, "yll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[2])
+	} else if (!is.null(grid)) {
+		stop("grid must be an instance of 'asc' if set")
+	}
+	
+	if (is.null(xc) || is.null(yc)) {
+		stop("Either grid or both xc and yc must be set")
+	}
+	
+	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
 	
 	timeSteps <- .UDtimesteps(tr, timestepSize)
 	
@@ -19,17 +32,37 @@
 #			as.integer(length(timesteps)/4), as.double(timesteps),
 #			as.double(xc), as.double(yc), as.integer(length(yc)), as.integer(length(xc)))
 
-		res <- matrix(cResult, nrow=length(yc))
-		rownames(res) <- yc
-		colnames(res) <- xc
+		res <- matrix(cResult, nrow=length(xc), byrow=TRUE)			
+		
+		if (!is.null(grid)) {
+			attributes(res) <- attributes(grid)
+		} else {
+			rownames(res) <- xc
+			colnames(res) <- yc
+		}
 		
 		UDs[[id]] <- res
 	}
 	
+	class(UDs) <- c("utilizationDistribution", "list")
 	return(UDs)
 }
 
-"encounterDistribution" <- function(tr, threshold, xc, yc, timestepSize=60) {
+"encounterDistribution" <- function(tr, threshold, grid=NULL, timestepSize=60, xc=NULL, yc=NULL) {
+	if (inherits(grid,"asc")) {
+		# extract the grid lines from the provided grid
+		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
+		yc <- seq(from=attr(grid, "yll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[2])
+	} else if (!is.null(grid)) {
+		stop("grid must be an instance of 'asc' if set")
+	}
+	
+	if (is.null(xc) || is.null(yc)) {
+		stop("Either grid or both xc and yc must be set")
+	}	
+	
+	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
+	
 	useFields <- c("x","y","diff.coeff","loc.var","t")
 	
 	timeSteps <- .UDtimesteps(tr, timestepSize)
@@ -59,13 +92,20 @@
 			as.double(c(ts2[,1],pad)), as.double(c(ts2[,2], pad)), as.double(c(sqrt(ts2[,3]),pad+1)),
 			as.double(xc), as.double(yc), as.integer(length(yc)), as.integer(length(xc)))
 			
-			res <- matrix(cResult, nrow=length(yc))
-			rownames(res) <- yc
-			colnames(res) <- xc
+			res <- matrix(cResult, nrow=length(xc), byrow=TRUE)			
+		
+			if (!is.null(grid)) {
+				attributes(res) <- attributes(grid)
+			} else {
+				rownames(res) <- xc
+				colnames(res) <- yc
+			}
+			
 			UDs[[id1,id2]] <- res
 		}
 	}
-	diag(UDs) <- utilizationDistribution(tr, xc, yc, timestepSize)
+	diag(UDs) <- utilizationDistribution(tr, timestepSize=timestepSize, xc=xc, yc=yc)
+	class(UDs) <- c("utilizationDistribution", "list")
 	return(UDs)
 }
 

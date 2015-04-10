@@ -6,12 +6,14 @@
 	.distance_statistic(tr, time, d, lmomco::cdfrice, 1)
 }
 
-"qdistance" <- function(q, tr, time) {
-	.distance_statistic(tr, time, q, lmomco::quarice, 0)
+"qdistance" <- function(p, tr, time) {
+	.distance_statistic(tr, time, p, lmomco::quarice, 0)
 }
 
 ".distance_statistic" <- function(tr, time, value, fn, diagonal_value=NA) {
 	ids <- unique(id(tr))
+	
+	tr <- bbFilterNA(tr) # This function does not like missing values
 		
 	# Construct an array indexed by time stamp and two IDs.
 	# Each element holds the requested statistic for these two groups at that time

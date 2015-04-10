@@ -34,10 +34,14 @@ void getUD(double *result, int *resultSize,
 		double *tsX, double *tsY, double *tsVar, double *tsW,
 		double *xc, double *yc, int *nrow, int *ncol);
 
-void encounterLinear(double *result, double *threshold, 
+void encounterLinear(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize, double *encounterIntervals = NULL);
+		double *timestepSize);
+void encounterLinearIntervals(double *result, double *threshold,
+		int *nloc1, BBMM_measurement<double> *data1,
+		int *nloc2, BBMM_measurement<double> *data2,
+		double *timestepSize, double *encounterIntervals);
 
 /**
  * Compute the expected duration of encounters between two bursts using the BBMM.
@@ -57,10 +61,11 @@ void encounterBBMM(double *result, double *threshold,
  * expected duration that the first trajectory is at (x,y) while simultaneously
  * the second trajectory is at most a distance *threshold away.
  */
-void encounterBBMMgrid(double *result, double *threshold, 
-		int *nloc1, BBMM_measurement<double> *data1,
-		int *nloc2, BBMM_measurement<double> *data2,
-		int *nAlpha,
+void encounterUD(double *result, int *resultSize,
+		double *threshold, int *nsteps,
+		// mean X coord, mean Y coord, variance and weight for each time step
+		double *tsX,  double *tsY,  double *tsVar, double *tsW,
+		double *ts2X, double *ts2Y, double *ts2SD, // and the distribution of the other trajectory
 		double *xc, double *yc, int *nrow, int *ncol);
 
 void diffusion(double *xys, double *Tr, 

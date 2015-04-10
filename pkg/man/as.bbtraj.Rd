@@ -15,7 +15,8 @@ The class \code{bbtraj} stores trajectories of animals, similar to the class \co
 \code{bbFilterNA} filters the missing measurements from a trajectory, removing bursts that are empty after this filtering.
 }
 \usage{
-as.bbtraj(xys, date = NULL, id, burst = id, typeII = TRUE, slsp = c("remove", "missing"))
+as.bbtraj(xys, date = NULL, id, burst = id, typeII = TRUE,
+          slsp = c("remove", "missing"), make.regular=FALSE)
 bbFilterNA(tr)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -35,14 +36,17 @@ bbFilterNA(tr)
     a trajectory of type I (time not recorded, e.g. sampling of tracks in
     the snow)}
   \item{slsp}{a character string used for the computation of the
-    turning angles (see details)}
+    turning angles (for details, see \code{\link{as.ltraj}})}
+  \item{make.regular}{Either \code{FALSE}, or a list specifying the arguments to \code{\link{setNA}} and \code{\link{sett0}}.}
   \item{tr}{A trajectory of class \code{ltraj} or \code{bbtraj}}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+If \code{make.regular} is not \code{FALSE}, it must be a list containing parameters
+accepted by \code{setNA} and \code{sett0}, by the same names or in the proper order.
+as these functions are used to make the resulting trajectory regular.
 }
 \value{
-  \code{ltraj} is a list with one component per burst of
+  An object of class \code{bbtraj} is a list with one component per burst of
   relocations.  Each component is a data frame with two attributes:
   the attribute \code{"id"} indicates the identity of the animal, and
   the attribute \code{"burst"} indicates the identity of the
@@ -91,11 +95,15 @@ data("example_data", package="movementAnalysis")
 example_data
 
 tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
-	date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
+    date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo)
 tr
+is.regular(tr)
 
-bbFilterNA(tr)
-
+# Now, make the trajectory regular while constructing it
+tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$StdDev^2),
+    date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo,
+    make.regular=list(date.ref=strptime("00:00", "\%H:\%M"), dt=1, units="hour"))
+is.regular(tr)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

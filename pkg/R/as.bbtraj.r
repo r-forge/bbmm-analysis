@@ -1,5 +1,5 @@
 as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
-                     slsp =  c("remove", "missing"))
+                     slsp =  c("remove", "missing"), make.regular=FALSE)
 {
     ## Various verifications
     if (typeII) {
@@ -110,10 +110,30 @@ as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
     
     
     s2 <- .diffusion_coefficient(res, c(0,10)); # TODO: make sure the range for the coefficient works out
-	res <- lapply(res, function(tr) {
-		tr$diff.coeff <- s2[[attr(tr, "id")]]
-		return(tr)
+	res <- lapply(res, function(b) {
+		b$diff.coeff <- s2[[attr(b, "id")]]
+		return(b)
 	})
+	
+    class(res) <- c("bbtraj","ltraj","list")
+    attr(res,"typeII") <- typeII
+    attr(res,"regular") <- is.regular(res)
+	
+	if (is.list(make.regular)) {
+		# call setNA and sett0 to make the trajectory regular
+		make.regular$ltraj <- res
+		make.regular$ltraj <- do.call(adehabitatLT::setNA, make.regular)
+		ltraj <- do.call(adehabitatLT::sett0, make.regular)
+		
+		# ltraj has some dropped columns, just copy the date fields from there to res
+		res <- lapply(res, function(b) {
+			ltb <- ltraj[burst=attr(b, "burst")][[1]]
+			b$date <- ltb$date
+			b$dt <- ltb$dt
+			b
+		})
+		attributes(res) <- attributes(ltraj)
+	}
 
 	## Output
     class(res) <- c("bbtraj","ltraj","list")

@@ -25,9 +25,9 @@ size_t quadraticRealRoots(T a, T b, T c, T &x1, T &x2) {
 
 // Returns the duration of encounters of two linearly moving points for t in [0,1]
 template<class T>
-T encounterFractionSegment(T threshold,
-		Vec2D<T> &start1, Vec2D<T> end1,
-		Vec2D<T> &start2, Vec2D<T> end2,
+T encounterFractionSegment(const T threshold,
+		const Vec2D<T> &start1, const Vec2D<T> &end1,
+		const Vec2D<T> &start2, const Vec2D<T> &end2,
 		T *encStart = NULL, T *encEnd = NULL) {
 
 	Vec2D<T> d0 = start2-start1; // the initial distance between the objects
@@ -66,25 +66,35 @@ T encounterFractionSegment(T threshold,
 
 extern "C" {
 
-void encounterLinear(double *result, double *threshold, 
+void encounterLinear(double *result, double *threshold,
+		int *nloc1, BBMM_measurement<double> *data1,
+		int *nloc2, BBMM_measurement<double> *data2,
+		double *timestepSize) {
+	encounterLinearIntervals(result, threshold, nloc1, data1, nloc2, data2, timestepSize, NULL);
+}
+
+void encounterLinearIntervals(double *result, double *threshold, 
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
 		double *timestepSize, double *encounterIntervals) {
+	size_t n1 = (size_t)*nloc1;
+	size_t n2 = (size_t)*nloc2;
+
 	*result = 0.0;
 	
-	off_t i = 1; // these point to the end times for the interval currently being processed
-	off_t j = 1;
+	size_t i = 1; // these point to the end times for the interval currently being processed
+	size_t j = 1;
 
 	// first make sure both intervals overlap
-	while (i < *nloc1 && data1[i].t < data2[0].t) {
+	while (i < n1 && data1[i].t < data2[0].t) {
 		i++;
 	}
-	while (j < *nloc2 && data2[j].t < data1[0].t) {
+	while (j < n2 && data2[j].t < data1[0].t) {
 		j++;
 	}
 
 	// calculate the starting positions of the first interval
-	double startTime = std::max(data1[i-1].t, data2[j-1].t);
+	double startTime = std::max(data1[0].t, data2[0].t);
 	
 	double alpha1 = (startTime - data1[i-1].t) / (data1[i].t - data1[i-1].t);
 	Vec2D<double> start1 = (1-alpha1) * data1[i-1].mu + alpha1 * data1[i].mu;
@@ -94,12 +104,13 @@ void encounterLinear(double *result, double *threshold,
 
 	double currEncIntv[2];
 	if (encounterIntervals != NULL) {
-		for (off_t k = 0; k < 2*(*nloc1 + *nloc2); k++) {
+		for (size_t k = 0; k < 2*(n1 + n2); k++) {
 			encounterIntervals[k] =  std::numeric_limits<double>::quiet_NaN();
 		}
 	}
 	
-	for (off_t k = 0; i < *nloc1 && j < *nloc2; k++) {
+	
+	for (size_t k = 0; i < n1 && j < n2; k++) {
 		double endTime = std::min(data1[i].t, data2[j].t);
 		
 		alpha1 = (endTime - data1[i-1].t) / (data1[i].t - data1[i-1].t);
