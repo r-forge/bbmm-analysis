@@ -54,6 +54,9 @@ IDs <- function(moveObj, groupBy=NULL) {
 		ids <- rownames(moveObj@idData)
 	} else {
 		ids <- moveObj@idData[[groupBy]]
+		if (is.null(ids)) {
+			stop(paste("Invalid field name '", groupBy, "' for groupBy", sep=""))
+		}
 	}
 	ids <- as.factor(ids)
 	names(ids) <- rownames(moveObj@idData)

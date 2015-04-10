@@ -13,16 +13,18 @@ setMethod(f = "utilizationDistribution",
 setMethod(f = "utilizationDistribution", 
           signature = c(object = "MoveBBStack", raster = "RasterLayer", timestepSize = "numeric"), 
           function(object, raster, timestepSize=60, groupBy=NULL, cutoff.level=1) {
-	UDs <- lapply(split(object), .utilizationDistribution, raster, timestepSize, cutoff.level)
+	os <- split(split(object), IDs(object, groupBy))
 
 	# Group the results if necessary
-	if (!is.null(groupBy)) {
-		UDs <- lapply(split(UDs, .IDs(object, groupBy)), function(us) {
-			u <- us[[1]]
-			values(u) <- apply(sapply(us, values), 1, sum)
-			u
-		})
-	}
+	values(raster) <- 0
+	UDs <- lapply(os, function(tr) {
+		u <- raster
+		for (burst in tr) {
+			values(u) <- values(u) + values(.utilizationDistribution(burst, raster, timestepSize, cutoff.level=1))
+		}
+		u
+	})
+
 	# Normalize all UDs, then create stack and return
 	new("UDStack", stack(lapply(UDs, function(u) { u/sum(values(u)) })))
 })
