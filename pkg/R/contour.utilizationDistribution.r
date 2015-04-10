@@ -32,8 +32,17 @@ setMethod(f="contourPolygons",
 			y=seq(extent(ud)@ymin, extent(ud)@ymax, length.out=nrow(ud))
 	)
 	
-	v <- matrix(values(.UD.alphaLevels(ud)), ncol(ud))[,nrow(ud):1]
-
+	## Surround the working matrix by a border of values outside any contour
+	## This avoids weird effects when the countour touches the raster border
+	v <- matrix(2, ncol(ud)+2, nrow(ud)+2)
+	v[2:(ncol(ud)+1),(nrow(ud)+1):2] <- matrix(values(.UD.alphaLevels(ud)), ncol(ud))
+	
+	## Make up coordinates for the border rows/columns
+	coords <- lapply(coords, function (cs) {
+		delta <- cs[2]-cs[1]
+		c(cs[1]-delta, cs, cs[length(cs)]+delta)
+	})
+	
 	lines <- contourLines(coords$x, coords$y, v, levels=levels)
 	# Get a separate list of line segments for each level
 	lines <- split(lines, as.factor(sapply(lines, "[[", "level")))

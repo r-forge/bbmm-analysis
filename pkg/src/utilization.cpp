@@ -54,7 +54,13 @@ SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps) {
 			// Set the limits of integration, then compute the integral
 			diff0T = integrate(dInt, Dt(i-1), Dt(i));
 		}
-		double alpha = integrate(dInt, Dt(i-1), t) / diff0T;
+		double alpha;
+		if (diff0T > 0) {
+			alpha = integrate(dInt, Dt(i-1), t) / diff0T;
+		} else {
+			// diffusion coefficient is zero everywhere, fall back to "old" method
+			alpha = (t - Dt(i-1)) / (Dt(i) - Dt(i-1));
+		}
 		
 		if (t < Dt(0)) {
 			Rx(k) = Dx(0);
@@ -103,7 +109,6 @@ void utilizationDistribution(double *result, int *resultSize,
 	double halfCellSize = 0.5 * (xc[1] - xc[0]);
 	for (off_t x = 0; x < *ncol; x++) {
 		for (off_t y = 0; y < *nrow; y++) {
-			//Rprintf("(%d,%d)\n", x, y);
 			Vec2D<double> pos(xc[x], yc[y]);
 			double *value = result + (x * *nrow + y);
 			*value = 0.0;

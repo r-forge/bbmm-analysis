@@ -5,7 +5,7 @@
 	# Make sure all IDs in the encounterList will be present in the matrix
 	burstIDs <- .IDs(attr(encounterDuration, "trajectory"), groupBy=groupBy)
 	useIDs <- unique(burstIDs)
-print(useIDs)
+	
 	models <- names(encounterDuration)[3:length(encounterDuration)]
 
 	encounterMatrix <- array(rep(0, length(models) * length(useIDs)^2), 

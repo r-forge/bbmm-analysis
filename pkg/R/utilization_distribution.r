@@ -63,7 +63,7 @@ setMethod(f = "utilizationDistribution",
 #		}
 		
 	pad <- rep(0, 15)
-			
+	
 	cResult <- .OpenCL("utilizationDistribution", length(gxc)*length(gyc),
 			as.integer(nrow(timesteps)),
 				as.double(c(timesteps[,1],pad)),
