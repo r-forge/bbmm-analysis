@@ -1,24 +1,22 @@
-"ddistance" <- function(d, tr, time) {
-	.distance_statistic(tr, time, d, lmomco::pdfrice, ifelse(d==0, Inf, 0))
+"ddistance" <- function(d, tr, time, groupBy=NULL) {
+	.distance_statistic(tr, time, d, lmomco::pdfrice, ifelse(d==0, Inf, 0), groupBy)
 }
 
-"pdistance" <- function(d, tr, time) {
-	.distance_statistic(tr, time, d, lmomco::cdfrice, 1)
+"pdistance" <- function(d, tr, time, groupBy=NULL) {
+	.distance_statistic(tr, time, d, lmomco::cdfrice, 1, groupBy)
 }
 
-"qdistance" <- function(p, tr, time) {
-	.distance_statistic(tr, time, p, lmomco::quarice, 0)
+"qdistance" <- function(p, tr, time, groupBy=NULL) {
+	.distance_statistic(tr, time, p, lmomco::quarice, 0, groupBy)
 }
 
-".distance_statistic" <- function(tr, time, value, fn, diagonal_value=NA) {
-	ids <- unique(adehabitatLT::id(tr))
+".distance_statistic" <- function(tr, time, value, fn, diagonal_value=NA, groupBy=NULL) {
+	ids <- unique(.IDs(tr, groupBy))
 	
-	tr <- bbFilterNA(tr) # This function does not like missing values
-		
 	# Construct an array indexed by time stamp and two IDs.
 	# Each element holds the requested statistic for these two groups at that time
 	res <- sapply(time, function(t) {
-		params <- position(tr, t)[,,1]
+		params <- position(tr, t, groupBy)[,,1]
 		
 		res <- array(rep(diagonal_value, length(value)*length(ids)^2), dim=c(length(ids),length(ids),length(value)))
 		for (i in 1:(length(ids)-1)) {
@@ -37,7 +35,7 @@
 		return(res)
 	})
 	
-	# Res is now a list; it really is a 4 dimensional array
+	# Res is now a vector; it really is a 4 dimensional array
 	dim(res) <- c(length(ids), length(ids), length(value), length(time))
 	dimnames(res) <- list(ids, ids, value, time)
 	

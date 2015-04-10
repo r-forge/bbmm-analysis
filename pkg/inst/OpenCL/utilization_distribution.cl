@@ -15,19 +15,19 @@ __kernel void utilizationDistribution(__global double *result, const int resultS
 		const int nsteps,
 		// mean X coord, mean Y coord, variance and weight for each time step
 		__global double4 *tsX,  __global double4 *tsY,  __global double4 *tsVar, __global double4 *tsW,
-		__global double *xc, __global double *yc, const int nrow, const int ncol) {
+		__global double *xc, __global double *yc, const int nxc, const int nyc) {
 	int idx = get_global_id(0);
 		
 	while (idx < resultSize) {
-		const double4 posX = (double4)(xc[idx / nrow]);
-		const double4 posY = (double4)(yc[idx % nrow]);
+		const double4 posX = (double4)(xc[idx / nxc]);
+		const double4 posY = (double4)(yc[idx % nxc]);
 	
 		double density = 0.0;
 		for (int i = 0; i < (nsteps+3) / 4; i++) {
 			const double4 dx = tsX[i] - posX;
 			const double4 dy = tsY[i] - posY;
 			
-			// taking the dot product with (1,1,1,1) sums the components of the result vector
+			// taking the dot product with the weights computes a weighted sum of the density
 			density += dot(pdf_norm2d((dx*dx + dy*dy), tsVar[i]), tsW[i]);
 		}
 		result[idx] = density;

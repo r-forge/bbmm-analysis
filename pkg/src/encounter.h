@@ -19,11 +19,21 @@ struct BBMM_timestep {
 	T weight; // the weight of this time step in the total UD
 };
 
+template<class T>
+struct LevyMM_timestep {
+	Vec2D<T> c3; // coefficients of a polynomial of degree 4,
+	T        c2; // some of which are vectors.
+	Vec2D<T> c1; // The coefficient for x^4 is always 1.
+	T        c0;
+	T        scaleFactor; // The whole polynomial is scaled by this factor.
+	T weight; // the weight of this time step in the total UD
+};
+
 extern "C" {
 
-void UDTimesteps(BBMM_timestep<double> *result,
-		int *nloc, BBMM_measurement<double> *data,
-		int *nsteps, double *timeLimits);
+//void UDTimesteps(BBMM_timestep<double> *result,
+//		int *nloc, BBMM_measurement<double> *data,
+//		int *nsteps, double *timeLimits);
 
 /**
  * Compute a utilization distribution
@@ -83,8 +93,17 @@ inline double pdf_norm2d(double d2, double var)
 
 inline double pdf_norm2d(Vec2D<double> p, Vec2D<double> mu, double var)
 {
-	// straightforward implementation of the expression for the pdf of N(mu, sigma^2)
+	// Call the squared-distance based function for the PDF
     return pdf_norm2d((p-mu).norm2(), var);
+}
+
+inline double cdf_norm2d(Vec2D<double> p, double hCellSize, Vec2D<double> mu, double var)
+{
+	double s2V = sqrt(2 * var);
+	// P(X inside cell of size cellSize centered at p) =
+	// 	P(p.x - cs/2 <= X.x <= p.x + cs/2) P(p.y - cs/2 <= X.y <= p.y + cs/2)
+	return (erf((p.x + hCellSize - mu.x)/s2V) - erf((p.x - hCellSize - mu.x)/s2V))
+			* (erf((p.y + hCellSize - mu.y)/s2V) - erf((p.y - hCellSize - mu.y)/s2V));
 }
 
 double marcumQ(const double alpha, const double beta);
