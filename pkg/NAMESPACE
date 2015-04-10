@@ -1,5 +1,10 @@
 useDynLib(movementAnalysis)
-
+import(move)
 exportPattern("^[^\\.]")
-
+exportClasses(
+	MoveBB,
+	MoveBBStack,
+	UD,
+	UDStack
+)
 

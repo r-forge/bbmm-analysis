@@ -1,4 +1,4 @@
-###create a list of Move objects from a Move Stack (hand over additional arguments!)
+###create a list of MoveBB objects from a MoveBBStack (hand over additional arguments!)
 setGeneric("split") 
 setMethod(f = "split",
 	signature = c(x="MoveBBStack", f="missing"),

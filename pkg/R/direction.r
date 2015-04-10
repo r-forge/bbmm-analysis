@@ -1,25 +1,31 @@
-"direction" <- function(tr, time, time.scale=NA) {
-	.direction_statistic(tr, time, time.scale, 0, .fn_mean_direction)[,"0",]
+"direction" <- function(tr, time, time.scale=NA, groupBy=NULL) {
+	d <- .direction_statistic(tr, time, time.scale, 0, .fn_mean_direction, groupBy)
+	# Drop the second dimension, which indexes the '0' value
+	# This construction prevents dropping other dimensions with unit extent
+	dn <- dimnames(d)
+	dim(d) <- dim(d)[-2]
+	dimnames(d) <- dn[-2]
+	d
 }
 
 ".fn_mean_direction" <- function(alpha, nu, theta) {
 	theta # parameters are noncentrality (i.e. speed of the mean) and theta (angle of the mean)
 }
 
-"ddirection" <- function(d, tr, time, time.scale=NA) {
-	.direction_statistic(tr, time, time.scale, d, .direction_pdf)
+"ddirection" <- function(d, tr, time, time.scale=NA, groupBy=NULL) {
+	.direction_statistic(tr, time, time.scale, d, .direction_pdf, groupBy)
 }
 
 ".direction_pdf" <- function(alpha, nu, theta) {
-	beta <- theta - alpha
+	eta <- theta - alpha
 	
 	exp(-0.5*nu^2) / (2*pi) +
-	nu * cos(beta) / sqrt(2 * pi) * exp(-0.5*(nu * sin(beta))^2) * pnorm(nu * cos(beta))
+	nu * cos(eta) / sqrt(2 * pi) * exp(-0.5*(nu * sin(eta))^2) * pnorm(nu * cos(eta))
 }
 
-"pdirection" <- function(d, tr, time, time.scale=NA, lower=0) {
+"pdirection" <- function(d, tr, time, time.scale=NA, groupBy=NULL, lower=0) {
 	.direction_statistic(tr, time, time.scale, d,
-			function(alpha, nu, theta) { .direction_cdf(alpha, nu, theta, lower) })
+			function(alpha, nu, theta) { .direction_cdf(alpha, nu, theta, lower) }, groupBy)
 }
 
 ".direction_cdf" <- function(alpha, nu, theta, lower=0) {
@@ -30,53 +36,44 @@
 	unlist(res["value",])
 }
 
-#"qdirection" <- function(p, tr, time, time.scale=NA) {
-#	.direction_statistic(tr, time, time.scale, p, lmomco::quarice)
+#"qdirection" <- function(p, tr, time, time.scale=NA, groupBy=NULL) {
+#	.direction_statistic(tr, time, time.scale, p, lmomco::quarice, groupBy)
 #}
 
-".direction_statistic" <- function(tr, time, time.scale, value, fn) {
-	if (inherits(time, "POSIXct")) {
-		time <- as.double(time)
-	}
-	if (is.na(time.scale)) {
-		if (length(time) > 1) {
-			# By default, use the average time between two elements of time argument
-			time.scale <- (time[length(time)]-time[1])/(length(time)-1)
-		} else {
-			stop('Cannot determine appropriate time.scale')
-		}
-	}
+setGeneric(".direction_statistic", function(object, time, time.scale, value, fn, groupBy=NULL) standardGeneric(".direction_statistic"))
+setMethod(f = ".direction_statistic",
+	signature = c(time="POSIXct", time.scale="numeric"),
+	definition = function(object, time, time.scale, value, fn, groupBy=NULL) {
+		s <- .direction_statistic(object, as.double(time), time.scale, value, fn, groupBy)
+		dimnames(s)[[3]] <- format(time, usetz=TRUE)
+		s
+})
 
-	ids <- unique(adehabitatLT::id(tr))
+setMethod(f=".direction_statistic",
+		signature = c(object="MoveBB", time="numeric", time.scale="numeric", value="numeric"),
+		definition = function(object, time, time.scale, value, fn) {
+	vl <- velocity(object, time, time.scale)
 	
-	tr <- na.omit(tr) # This function does not like missing values
+	r <- t(apply(vl, 1, function(v) {
+		nu <- sqrt(sum((v[c('x','y')])^2)) / sqrt(v['var'])
+		theta <- atan2(v['y'], v['x'])
 		
-	# Construct an array indexed by time stamp and an ID.
-	# Each element holds the requested statistic for this group at that time
-	res <- sapply(time, function(t) {
-		params <- velocity(tr, t, time.scale)[,,1]
-		# If there is only one ID, its dimension was just dropped; restore it
-		dim(params) <- c(length(ids), 3)
-		dimnames(params) <- list(ids, c('x','y','var'))
-		
-		res <- array(NA, dim=c(length(ids),length(value)))
-		for (i in 1:length(ids)) {
-			nu <- sqrt(sum((params[i,c('x','y')])^2)) / sqrt(params[i, 'var'])
-			theta <- atan2(params[i,'y'], params[i,'x'])
-			
-			if (all(!is.na(c(nu, theta)))) {
+		if (!any(is.na(c(nu, theta)))) {
 			#print(value)
 			#print(do.call(fn, list(value, nu, theta)))
-				res[i,] <- do.call(fn, list(value, nu, theta))
-			} else {
-				res[i,] <- NA
-			}
+			res <- do.call(fn, list(value, nu, theta))
+		} else {
+			res <- rep(NA, length(value))
 		}
-		return(res)
-	})
-	
-	# Res is now a list; it really is a 3 dimensional array
-	dim(res) <- c(length(ids), length(value), length(time))
-	dimnames(res) <- list(ids, value, time)
-	return(res)
-}
+		names(res) <- as.character(value)
+		res
+	}))
+	matrix(r, nrow(vl), length(value), dimnames=list(time, value))
+})
+
+setMethod(f=".direction_statistic",
+		signature = c(object="MoveBBStack", time="numeric", time.scale="numeric", value="numeric"),
+		definition = function(object, time, time.scale, value, fn, groupBy=NULL) {
+	.mBBStack_statistic(object, time, groupBy, name=".direction_statistic", time.scale=time.scale, value=value, fn=fn)
+})
+

@@ -28,18 +28,18 @@
 	}
 }
 
-# Let the user override the device selected above
-"OpenCL_setDevice" <- function(dev) {
-#	if (class(dev) != "clDeviceID") {
-#		stop("dev must be an instance of clDeviceID, obtained from oclDevices()")
-#	}
-	unlockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
-	unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
-	.OpenCL_dev <<- dev
-	.OpenCL_kernels <<- NA # kernels will need to be rebuilt for this device
-	lockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
-	lockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
-}
+## Let the user override the device selected above
+#"OpenCL_setDevice" <- function(dev) {
+##	if (class(dev) != "clDeviceID") {
+##		stop("dev must be an instance of clDeviceID, obtained from oclDevices()")
+##	}
+#	unlockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+#	unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
+#	.OpenCL_dev <<- dev
+#	.OpenCL_kernels <<- NA # kernels will need to be rebuilt for this device
+#	lockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+#	lockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
+#}
 
 # get an OpenCL kernel with the provided name, if it exists
 ".OpenCL_getKernel" <- function(name) {
@@ -89,9 +89,9 @@
 	}
 }
 
-OpenCL_test <- function(nu, sd, x) {
-	print("test")
-	r <- .OpenCL("riceTest", length(x), as.double(nu), as.double(sd), as.double(x))
-	print(r)
-}
+#OpenCL_test <- function(nu, sd, x) {
+#	print("test")
+#	r <- .OpenCL("riceTest", length(x), as.double(nu), as.double(sd), as.double(x))
+#	print(r)
+#}
 

@@ -1,16 +1,14 @@
-classes: print, summary etc.
-velocity
-speed
-direction
-split: Performance problems, parts taken from move
-subset: Does it work as it should, easy to use etc.?
-summary: parts taken from move
-utilizationDistribution: restore cutoff.level
-encounterDistribution
+	classes: print, summary etc.
+	split: Performance problems, parts taken from move
+	subset: Does it work as it should, easy to use etc.?
+	summary: parts taken from move
+	utilizationDistribution: restore cutoff.level
+##	encounterDistribution
+##	encounterIntervals
 
-contourPolygons: incorrect behaviour when polygon hits edge of region
-	"Solution": Add border of zeroes around?
+	contourPolygons: incorrect behaviour when polygon hits edge of region
+		"Solution"/Workaround: Add border of zeroes around?
 
-Documentation!
+	Documentation!
 
-ud.levy: adapt to moveBB, not urgent
+	ud.levy: adapt to moveBB, not urgent

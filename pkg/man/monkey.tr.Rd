@@ -11,8 +11,8 @@ are missing values.
 }
 \usage{data(vervet_monkeys)}
 \format{	
-	An object of type \code{\link{bbtraj}} created from the data in \code{\link{monkey.data}},
-	containing four bursts, one for each \code{(monkey, day)} pair.
+	An object of type \code{\linkS4class{MoveBBStack}} created from the data in \code{\link{monkey.data}},
+	containing four daily trajectories, one for each \code{(monkey, day)} pair.
 }
 \source{
 %%  ~~ reference to a publication or URL from which the data were obtained ~~

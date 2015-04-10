@@ -24,6 +24,7 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 	yc = VECTOR_ELT(rasterCoords, 1);
 	double *xcd = REAL(xc), *ycd = REAL(yc);
 	
+	// allocate output data structure: a list of two matrices
 	PROTECT(result = allocVector(VECSXP, 2));
 	PROTECT(rSum = allocMatrix(REALSXP, length(xc), length(yc)));
 	SET_VECTOR_ELT(result, 0, rSum);
