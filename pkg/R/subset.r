@@ -23,3 +23,10 @@ setMethod("[",
 	print(names(x@diffusion))
 	x
 })
+
+setMethod("[[",
+		signature(x="UDStack"),
+		definition=function(x, i) {
+	u <- callNextMethod()
+	new("UD", u)
+})

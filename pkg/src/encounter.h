@@ -48,21 +48,18 @@ void utilizationDistribution(double *result, int *resultSize,
 
 void encounterLinear(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
-		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize);
+		int *nloc2, BBMM_measurement<double> *data2);
 
 void encounterLinearIntervals(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize, double *encounterIntervals);
+		double *encounterIntervals);
 
 /**
  * Compute the expected duration of encounters between two bursts using the BBMM.
  */
 void encounterBBMM(double *result, double *threshold, 
-		int *nloc1, BBMM_measurement<double> *data1,
-		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize);
+		int *nsteps, BBMM_timestep<double> *data);
 
 /**
  * Computes the spatial distribution of expected encounter durations.

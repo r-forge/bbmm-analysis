@@ -1,23 +1,26 @@
-"encounterDurationById" <- function(encounterDurationByBurst, IDs=NULL) {
+"encounterDurationById" <- function(encounterDuration, groupBy=NULL) {
 	# Compute the total duration of encounters for each pair of IDs
+	
 
 	# Make sure all IDs in the encounterList will be present in the matrix
-	useIDs <- sort(unique(c(IDs, encounterDurationByBurst$id1, encounterDurationByBurst$id2)))
-
-	models <- names(encounterDurationByBurst)[5:length(encounterDurationByBurst)]
+	burstIDs <- .IDs(attr(encounterDuration, "trajectory"), groupBy=groupBy)
+	useIDs <- unique(burstIDs)
+print(useIDs)
+	models <- names(encounterDuration)[3:length(encounterDuration)]
 
 	encounterMatrix <- array(rep(0, length(models) * length(useIDs)^2), 
 		dim=c(length(useIDs),length(useIDs),length(models)),
 		dimnames=list(useIDs, useIDs, models))
+	# No encounters between ID and itself, set diagonal entries
 	for (id in useIDs) {
 		encounterMatrix[id, id,] <- NA
 	}
 	
-	duration <- sapply(encounterDurationByBurst[,models], as.numeric)
-	if (nrow(encounterDurationByBurst) > 0) {
-		for (i in 1:nrow(encounterDurationByBurst)) {
-			id1 <- encounterDurationByBurst$id1[i]
-			id2 <- encounterDurationByBurst$id2[i]
+	duration <- sapply(encounterDuration[,models], as.numeric)
+	if (nrow(encounterDuration) > 0) {
+		for (i in 1:nrow(encounterDuration)) {
+			id1 <- burstIDs[encounterDuration$burst1[i]]
+			id2 <- burstIDs[encounterDuration$burst2[i]]
 			
 			encounterMatrix[id1, id2, models] <- encounterMatrix[id1, id2, models] + c(duration[i, models])
 		}
@@ -25,85 +28,107 @@
 	
 	# We only have the part above the diagonal now, make the matrix symmetric
 	encounterMatrix <- encounterMatrix + aperm(encounterMatrix, c(2,1,3))
-	encounterMatrix <- as.difftime(encounterMatrix, units=attr(encounterDurationByBurst[[models[1]]], "units"))
+	encounterMatrix <- as.difftime(encounterMatrix, units=attr(encounterDuration[[models[1]]], "units"))
 	class(encounterMatrix) <- c("encounterDuration", class(encounterMatrix))
 	encounterMatrix
 }
 
-"encounterDuration" <- function(tr, threshold, model=c("BBMM", "linear"), byburst=FALSE, timestepSize=60)
+"encounterDuration" <- function(tr, threshold, model=c("BBMM", "Linear"), groupBy=NULL, timestepSize=60)
 {
-# If byburst, produces encounter duration for each pair of bursts that overlap in time
-# Else, produces encounter duration for each pair of distinct IDs
-	tr <- bbFilterNA(tr) # This function does not like missing values
+# If groupBy=NULL, produces encounter duration for each pair of distinct elements in the MoveBBStack that overlap in time
+# Else, produces encounter duration for each pair of distinct values of the field indicated by groupBy
+	model <- match.arg(model, several.ok=TRUE)
 
 	# Allocate maximum-size data frame to collect the results in
-	n <- length(tr)
+	trs <- split(tr)
+	n <- length(trs)
 	emptyCol <- list(rep(NA, n*(n-1)/2)) # size n choose 2, TODO: this can probably be optimized
-	result <- as.data.frame(rep(emptyCol, 4+length(model)))
-	names(result) <- c("id1", "id2", "burst1", "burst2", model)
+	result <- as.data.frame(rep(emptyCol, 2+length(model)))
+	names(result) <- c("burst1", "burst2", model)
 	rm(emptyCol)
 	
 	resultSize <- 0 # Insert the next result into row resultSize+1
 
 	# Sort the bursts in tr by their starting time
-	tr <- tr[sort.list(sapply(tr, function(b) {min(b$date)}))]
+	trs <- trs[sort.list(sapply(trs, function(b) { min(b@timestamps) }))]
 	activeBursts <- list()
 
 	# For each pair of bursts, compute overlap and add to proper result
-	for (burst in tr) {
+	for (burst in names(trs)) {
 		# Filter out the bursts that end before this one starts
 		activeBursts <- activeBursts[sapply(activeBursts, function(b) {
-			max(b$date)
-			}) >= min(burst$date)]
+			max(b@timestamps)
+			}) >= min(trs[[burst]]@timestamps)]
 		
-		for (b in activeBursts) {
+		for (b in names(activeBursts)) {
 			# b overlaps with burst in time, so compute encounter durations
 			resultSize <- resultSize+1
-			if (attr(b, "id") < attr(burst, "id")) {
-				result[resultSize,1:4] <- c(attr(b, "id"), attr(burst, "id"), attr(b, "burst"), attr(burst, "burst"))
-			} else {
-				result[resultSize,1:4] <- c(attr(burst, "id"), attr(b, "id"), attr(burst, "burst"), attr(b, "burst"))
-			}
+			# Make sure lexicographically smaller burst name appears first
+			result[resultSize,1:2] <- range(b, burst)
+			
 			result[resultSize,model] <- sapply(model, function(m) {
-				.burstEncounterDuration(burst, b, threshold, timestepSize, m) 
+				fn <- paste(".burstEncounterDuration", m, sep="")
+				do.call(fn, list(trs[[burst]], activeBursts[[b]], threshold, timestepSize))
 			})
 		}
 		
-		activeBursts <- c(activeBursts, list(burst))
+		activeBursts <- c(activeBursts, trs[burst])
 	}
 
 	# Store the results in difftime format	
 	result[,model] <- lapply(result[,model], function(d) { as.difftime(d, units="secs") })
 	
-	if (byburst) {
+	attr(result, "trajectory") <- tr
+	if (is.null(groupBy)) {
 		result <- result[1:resultSize,] # return only the filled in rows
 		class(result) <- c("encounterDuration", "data.frame")
 		result
 	} else {
-		ids <- unique(sapply(tr, function(x) { attr(x, "id") }))
-		encounterDurationById(result[1:resultSize,], ids)
+		encounterDurationById(result[1:resultSize,], groupBy=groupBy)
 	}
 }
 
-".burstEncounterDuration" <- function (b1, b2, dist, timestepSize, model) {
-	implementations <- c(linear="encounterLinear", BBMM="encounterBBMM")
+".burstEncounterDurationLinear" <- function (b1, b2, dist, timestepSize) {
 	# serialize the fields we need from the bursts in row-major order
-	b1$t <- as.double(b1$date)
-	b1 <- b1[!is.na(b1$x), c("x","y","diff.coeff","loc.var","t")]
-	b1 <- b1[!is.na(b1$y),]
-	b1 <- b1[!is.na(b1$loc.var),]
-	data1 <- c(t(b1)) # flatten into row-major vector
-	
-	b2$t <- as.double(b2$date)
-	b2 <- b2[!is.na(b2$x), c("x","y","diff.coeff","loc.var","t")]
-	b2 <- b2[!is.na(b2$y),]
-	b2 <- b2[!is.na(b2$loc.var),]
-	data2 <- c(t(b2)) # flatten into row-major vector
+	# Substitute 0 for diffusion coefficient, linear model doesn't care
+	d1 <- cbind(b1@coords, 0, b1@variance, as.double(b1@timestamps))
+	d1 <- d1[apply(d1, 1, function(r) { !any(is.na(r)) }),]
 
-	cResult <- .C(implementations[model],
+	data1 <- c(t(d1)) # flatten into row-major vector
+	
+	d2 <- cbind(b2@coords, 0, b2@variance, as.double(b2@timestamps))
+	d2 <- d2[apply(d2, 1, function(r) { !any(is.na(r)) }),]
+	
+	data2 <- c(t(d2)) # flatten into row-major vector
+
+	cResult <- .C("encounterLinear",
 			double(1), as.double(dist),
-			as.integer(nrow(b1)), as.double(data1),
-			as.integer(nrow(b2)), as.double(data2),
-			as.double(timestepSize), double(2*(nrow(b1) + nrow(b2))), PACKAGE="movementAnalysis")
+			as.integer(nrow(d1)), as.double(data1),
+			as.integer(nrow(d2)), as.double(data2),
+			as.double(timestepSize), PACKAGE="movementAnalysis")
+	cResult[[1]] # The result is collected in the first C argument
+}
+
+".burstEncounterDurationBBMM" <- function (b1, b2, dist, timestepSize) {
+	timeLimits <- c(range(as.double(b1@timestamps)), range(as.double(b2@timestamps)))
+	timeLimits <- c(max(timeLimits[c(1,3)]), min(timeLimits[c(2,4)]))
+	# Align the time of each step to a multiple of timestepSize
+	timeStamps <- unique(c(seq(timeLimits[1], timeLimits[2], by=timestepSize), timeLimits[2]))
+
+	p1 <- position(b1, timeStamps)
+	p2 <- position(b2, timeStamps)
+	
+	# TODO: fix the stepsize of the first and two last rows
+	data <- cbind(p1[,c('x','y')] - p2[,c('x','y')], p1[,'var']+p2[,'var'], timestepSize)
+	data[1, "timestepSize"] <- timestepSize / 2
+	data[nrow(data),   "timestepSize"] <-
+			(timeStamps[length(timeStamps)] - timeStamps[length(timeStamps)-1]) / 2
+	data[nrow(data)-1, "timestepSize"] <-
+			data[1, "timestepSize"] + data[nrow(data), "timestepSize"]
+
+	cResult <- .C("encounterBBMM",
+			double(1), as.double(dist),
+			as.integer(nrow(data)), as.double(t(data)),
+			PACKAGE="movementAnalysis")
 	cResult[[1]] # The result is collected in the first C argument
 }

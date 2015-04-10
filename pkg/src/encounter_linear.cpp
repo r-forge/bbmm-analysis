@@ -68,15 +68,14 @@ extern "C" {
 
 void encounterLinear(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
-		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize) {
-	encounterLinearIntervals(result, threshold, nloc1, data1, nloc2, data2, timestepSize, NULL);
+		int *nloc2, BBMM_measurement<double> *data2) {
+	encounterLinearIntervals(result, threshold, nloc1, data1, nloc2, data2, NULL);
 }
 
 void encounterLinearIntervals(double *result, double *threshold, 
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
-		double *timestepSize, double *encounterIntervals) {
+		double *encounterIntervals) {
 	size_t n1 = (size_t)*nloc1;
 	size_t n2 = (size_t)*nloc2;
 

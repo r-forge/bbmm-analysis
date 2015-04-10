@@ -43,3 +43,11 @@ setClass(Class = "MoveBBStack", contains=c("MoveStack", ".BBInfo"),
 		}
 	}
 )
+
+setClass(Class="UD", contains=".UD",
+	representation=representation(),
+	prototype=prototype(),)
+	
+setClass(Class="UDStack", contains=".UDStack",
+	representation=representation(),
+	prototype=prototype(),)

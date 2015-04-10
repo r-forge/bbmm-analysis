@@ -1,3 +1,4 @@
+# TODO: We should probably use S4 generics
 # TODO: can we somehow connect this to move::getVolumeUD?
 contour.ud <- function (x, levels=0.99, col=hcl(1:nlayers(x) * 360/nlayers(x), l=35),
 		labels=levels, add=FALSE, ...) {
@@ -14,32 +15,47 @@ contour.ud <- function (x, levels=0.99, col=hcl(1:nlayers(x) * 360/nlayers(x), l
 	}
 }
 
-contourPolygons <- function(ud, levels=0.99) {
-#	if (!inherits(ud, "utilizationDistribution")) {
-#		stop("ud must be of class utilizationDistribution")
-#	}
-	
+setGeneric("contourPolygons", function(ud, levels=0.99, ...) standardGeneric("contourPolygons"))
+setMethod(f="contourPolygons",
+	signature=c(levels="missing"), 
+	definition = function(ud, levels, ...) {
+
+	contourPolygons(ud, levels=0.99, ...)
+})
+
+setMethod(f="contourPolygons",
+	signature=c(ud="RasterLayer", levels="numeric"), 
+	definition = function(ud, levels, ...) {
+
 	coords <- list(
 			x=seq(extent(ud)@xmin, extent(ud)@xmax, length.out=ncol(ud)),
 			y=seq(extent(ud)@ymin, extent(ud)@ymax, length.out=nrow(ud))
 	)
-	lapply(unstack(ud), function(r) {
-		v <- matrix(values(.UD.alphaLevels(r)), ncol(ud))[,nrow(ud):1]
+	
+	v <- matrix(values(.UD.alphaLevels(ud)), ncol(ud))[,nrow(ud):1]
 
-		lines <- contourLines(coords$x, coords$y, v, levels=levels)
-		# Get a separate list of line segments for each level
-		lines <- split(lines, as.factor(sapply(lines, "[[", "level")))
+	lines <- contourLines(coords$x, coords$y, v, levels=levels)
+	# Get a separate list of line segments for each level
+	lines <- split(lines, as.factor(sapply(lines, "[[", "level")))
 		
-		# The result is a SpatialPolygons object with one set of Polygons for each level
-		SpatialPolygons(lapply(lines, function(ls) {
-			ps <- Polygons(lapply(ls, function(l) {
-				# Repeat the first coordinate to make sure the ring is closed
-				Polygon(rbind(cbind(l$x, l$y), c(l$x[1], l$y[1])))
-			}), ls[[1]]$level)
-			maptools::checkPolygonsHoles(ps)
-		}), proj4string=ud@crs)
-	})
-}
+	# The result is a SpatialPolygons object with one set of Polygons for each level
+	SpatialPolygons(lapply(lines, function(ls) {
+		ps <- Polygons(lapply(ls, function(l) {
+			# Repeat the first coordinate to make sure the ring is closed
+			Polygon(rbind(cbind(l$x, l$y), c(l$x[1], l$y[1])))
+		}), ls[[1]]$level)
+		maptools::checkPolygonsHoles(ps)
+	}), proj4string=ud@crs)
+})
+
+setMethod(f="contourPolygons",
+	signature=c(ud="RasterStack", levels="numeric"), 
+	definition = function(ud, levels, ...) {
+
+	cp <- lapply(unstack(ud), "contourPolygons", levels, ...)
+	names(cp) <- names(ud)
+	cp
+})
 
 # Given a RasterLayer representing a UD, compute for each cell the minimum alpha level for which it would be inside the contour
 ".UD.alphaLevels" <- function(ud) {

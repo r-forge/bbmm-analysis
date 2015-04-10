@@ -1,9 +1,10 @@
-"distance" <- function(tr, time) {
-	.distance_statistic(tr, time, 0, .fn_mean_distance, 0)[,,"0",]
+"distance" <- function(tr, time, groupBy=NULL) {
+	.distance_statistic(tr, time, 0, .fn_lin_distance, 0, groupBy)[,,"0",]
 }
 
-".fn_mean_distance" <- function(value, distr) {
-	distr$para[1] # parameters are noncentrality (i.e. mean distance) and std dev
+".fn_lin_distance" <- function(value, distr) {
+	# parameters are noncentrality (i.e. abs. value of mean difference) and std dev
+	distr$para[1]
 }
 
 "encounter" <- function(d, tr, time) {

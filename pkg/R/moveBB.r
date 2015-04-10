@@ -42,20 +42,21 @@ setMethod(f="moveBB",
 		)
 	}
 	
-	# Set the diffusion coefficient if the trajectory is projected
+	# Set the default diffusion coefficient if the trajectory is projected
 	if (!isLonLat(res)) {
 		diffusion(res) <- diffusionCoefficient(res)
 	}
 	res
 }
 
-.IDs <- function(moveObj, groupBy=NULL) {
+IDs <- function(moveObj, groupBy=NULL) {
 	if (is.null(groupBy)) {
 		ids <- rownames(moveObj@idData)
 	} else {
 		ids <- moveObj@idData[[groupBy]]
 	}
-	ids <- as.character(ids)
+	ids <- as.factor(ids)
 	names(ids) <- rownames(moveObj@idData)
 	ids
 }
+.IDs <- IDs # Deprecated hidden version of the IDs function

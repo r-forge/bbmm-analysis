@@ -1,60 +1,84 @@
 # Provides location information for each id in the trajectory at the given time(s)
 setGeneric("position", function(object, time, groupBy=NULL) standardGeneric("position"))
 setMethod(f = "position",
-	signature = c(object="MoveBBStack", time="POSIXct"),
-	definition = function (object, time, groupBy=NULL) {
-		p <- position(object, as.double(time), groupBy)
-		dimnames(p)[[3]] <- format(time, usetz=TRUE)
+	signature = c(object="MoveBB", time="POSIXct"),
+	definition = function(object, time) {
+		p <- position(object, as.double(time))
+		rownames(p) <- format(time, usetz=TRUE)
 		p
 })
 
 setMethod(f = "position",
-	signature = c(object="MoveBBStack", time="numeric"),
+	signature = c(object="MoveBB", time="numeric"),
+	definition = function(object, time) {
+		res <- sapply(time, function(t) {
+			# Extract the bursts that contain the selected time	
+			res <- c(x=NA, y=NA, var=NA)
+			if (as.double(object@timestamps[1]) <= t &&
+					as.double(object@timestamps[nrow(object)]) >= t) {
+						ts <- as.double(object@timestamps)
+						j <- max(which(ts >= t)[1], 2)
+
+						diff0T <- integrate(object@diffusion[[1]], ts[j-1], ts[j])
+						diff0t <- integrate(object@diffusion[[1]], ts[j-1], t)
+						if (diff0T$message != "OK" || diff0t$message != "OK") {
+							stop("Problem integrating diffusion coefficient")
+						}
+						diff0T <- diff0T$value
+						diff0t <- diff0t$value
+						alpha <- diff0t / diff0T
+						res[c("x","y")] <- (1-alpha)*object@coords[j-1,] + alpha*object@coords[j,]
+						res["var"] <- (
+								  diff0t*(1-alpha) # 1-alpha = diff_tT/diff_0T
+								+ (1-alpha)^2 * object@variance[j-1]
+								+ alpha^2 * object@variance[j]
+						)
+			}
+			res
+		})
+		
+		dim(res) <- c(3, length(time))
+		dimnames(res) <- list(c("x","y","var"), time)
+	
+		t(res)
+})
+
+setMethod(f = "position",
+	signature = c(object="MoveBBStack"),
 	definition = function (object, time, groupBy=NULL) {
 		tr <- split(object)
 		
-		ids <- unique(.IDs(object, groupBy))
+		tr.id <- .IDs(object, groupBy)
+		ids <- unique(tr.id)
 		
-		res <- sapply(time, function(t) {
-			# Extract the bursts that contain the selected time	
-			tr <- tr[sapply(tr, function(b) {
-				as.double(b@timestamps[1]) <= t &&
-				as.double(b@timestamps[nrow(b)]) >= t
-			})]
+		# Collect positions for each burst and group them by their ID
+		tr.pos <- lapply(tr, "position", time)
+		id.pos <- split(tr.pos, tr.id)
+		
+		# Merge the positions of the bursts for each ID
+		res <- lapply(id.pos, function(p) {
+			p.set <- sapply(p, function(p) {
+				apply(p, 1, function(row) { all(!is.na(row)) })
+			})
+			dim(p.set) <- c(length(time), length(p)) # Make sure it is always a matrix
+			dimnames(p.set) <- list(time, names(p))
 
-			if (length(tr) > length(ids))
-				stop("Multiple bursts contain requested time for some ID")
-
-			res <- matrix(nrow=length(ids), ncol=3, dimnames=list(ids, c("x","y","var")))
-			if (length(tr) > 0) {
-				for (i in names(tr)) {
-					b <- tr[[i]]
-					i <- .IDs(b, groupBy) # get the proper ID for the burst
-					
-					ts <- as.double(b@timestamps)
-					j <- max(which(ts >= t)[1], 2)
-
-					diff0T <- integrate(b@diffusion[[1]], ts[j-1], ts[j])
-					diff0t <- integrate(b@diffusion[[1]], ts[j-1], t)
-					if (diff0T$message != "OK" || diff0t$message != "OK") {
-						stop("Problem integrating diffusion coefficient")
-					}
-					diff0T <- diff0T$value
-					diff0t <- diff0t$value
-					alpha <- diff0t / diff0T
-					res[i, c("x","y")] <- (1-alpha)*b@coords[j-1,] + alpha*b@coords[j,]
-					res[i, "var"] <- (
-							  diff0t*(1-alpha)
-							+ (1-alpha)^2 * b@variance[j-1]
-							+ alpha^2 * b@variance[j]
-					)
-				}
+			# Check that no two bursts contain a position for the same time
+			if (any(apply(p.set, 1, sum) > 1)) {
+				stop("Multiple bursts for same ID overlap")
 			}
-			return(res)
-		})
 			
-		dim(res) <- c(length(ids),3,length(time))
-		dimnames(res) <- list(ids, c("x","y","var"), time)
-	
-		return(res)
+			# Select all the set values from the different bursts
+			p.select <- apply(p.set, 1, which.max)
+			pos <- sapply(1:length(p.select), function(i) {
+				p[[p.select[i]]][i,]
+			})
+			pos
+		})
+		
+		# Convert to 3d array, set correct order of dimensions
+		res <- simplify2array(res)
+		dim(res) <- c(3, length(time), length(ids))
+		dimnames(res) <- list(c('x','y','var'), as.character(time, usetz=TRUE), ids)
+		aperm(res, c(3,1,2))
 })

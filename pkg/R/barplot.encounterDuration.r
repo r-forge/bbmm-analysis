@@ -7,8 +7,8 @@ barplot.encounterDuration <- function(height, col=NULL, units="auto", ...) {
 	if (is.data.frame(height)) {
 		# duration by burst
 		
-		# The first 4 columns do not contain values for models
-		models <- colnames(height)[5:length(colnames(height))]
+		# The first 2 columns do not contain values for movement models
+		models <- colnames(height)[3:length(colnames(height))]
 		
 		if (!any(is.na(suppressWarnings(as.numeric(rownames(height)))))) {
 			# All row names are numbers; override the row names using the burst names

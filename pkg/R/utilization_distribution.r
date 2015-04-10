@@ -1,29 +1,68 @@
-"utilizationDistribution" <- function(tr, raster=NULL, timestepSize=60,
+setGeneric("utilizationDistribution", function(object, raster=NULL, timestepSize=60,
 		grid.dim=100, grid.pad=0.2, groupBy=NULL, cutoff.level=1) {
-	
-	
-	if (is.null(raster)) {
-		raster <- .defaultRaster(extent(tr), grid.dim, grid.pad)
-	}
-		
-	if (inherits(raster,"RasterLayer")) {
-		# extract the grid lines from the provided grid
-		ext <- extent(raster)
-		xc <- seq(ext@xmin, ext@xmax, length.out=ncol(raster))
-		yc <- seq(ext@ymin, ext@ymax, length.out=nrow(raster))
-	} else {
-		stop("raster must be an instance of 'RasterLayer' if set")
-	}
-		
-	timeSteps <- .UDtimesteps(tr, timestepSize, groupBy)
-	
-	UDs <- list()
-	# For each timestep, compute the mean location, variance, and a weighing factor
-	for (id in names(timeSteps)) {
-		ts <- timeSteps[[id]]
+	standardGeneric("utilizationDistribution")
+})
 
-		gxc <- xc
-		gyc <- yc
+setMethod(f = "utilizationDistribution", 
+		signature = c(object = "MoveBB", raster = "RasterLayer", timestepSize = "numeric"), 
+		function(object, raster, timestepSize=60, cutoff.level=1) {
+	r <- .utilizationDistribution(object, raster, timestepSize, cutoff.level=1)
+	new("UD", r/sum(values(r)))
+})
+
+setMethod(f = "utilizationDistribution", 
+          signature = c(object = "MoveBBStack", raster = "RasterLayer", timestepSize = "numeric"), 
+          function(object, raster, timestepSize=60, groupBy=NULL, cutoff.level=1) {
+	UDs <- lapply(split(object), .utilizationDistribution, raster, timestepSize, cutoff.level)
+
+	# Group the results if necessary
+	if (!is.null(groupBy)) {
+		UDs <- lapply(split(UDs, .IDs(object, groupBy)), function(us) {
+			u <- us[[1]]
+			values(u) <- apply(sapply(us, values), 1, sum)
+			u
+		})
+	}
+	# Normalize all UDs, then create stack and return
+	new("UDStack", stack(lapply(UDs, function(u) { u/sum(values(u)) })))
+})
+
+setMethod(f = "utilizationDistribution", 
+		signature = c(object = ".MoveTrack", raster="missing"),
+		function(object, timestepSize=60, grid.dim=100, grid.pad=0.2, groupBy=NULL, cutoff.level=1) {
+	if (!is.numeric(grid.dim) || !is.numeric(grid.pad)) {
+		stop("grid.dim and grid.pad must be numeric")
+	}
+	raster <- .defaultRaster(extent(object), grid.dim, grid.pad, object@proj4string)
+	utilizationDistribution(object=object, raster=raster,
+			timestepSize=timestepSize, groupBy=groupBy, cutoff.level=cutoff.level)
+})
+
+".utilizationDistribution" <- function(object, raster, timestepSize, cutoff.level) {
+	timesteps <- .UDtimesteps(object, timestepSize)
+#	if (is.null(raster)) {
+#		raster <- .defaultRaster(extent(tr), grid.dim, grid.pad)
+#	}
+#		
+#	if (inherits(raster,"RasterLayer")) {
+#		# extract the grid lines from the provided grid
+#		ext <- extent(raster)
+#		xc <- seq(ext@xmin, ext@xmax, length.out=ncol(raster))
+#		yc <- seq(ext@ymin, ext@ymax, length.out=nrow(raster))
+#	} else {
+#		stop("raster must be an instance of 'RasterLayer' if set")
+#	}
+#		
+#	timeSteps <- .UDtimesteps(tr, timestepSize, groupBy)
+
+	# extract the grid lines from the provided grid
+	ext <- extent(raster)
+	xc <- seq(ext@xmin, ext@xmax, length.out=ncol(raster))
+	yc <- seq(ext@ymin, ext@ymax, length.out=nrow(raster))
+	
+	# For each timestep, compute the mean location, variance, and a weighing factor
+	gxc <- xc
+	gyc <- yc
 #		if (cutoff.level < 1) {
 #			# Find a box that is guaranteed to contain the requested contour.
 #			# The bounding box containing the cutoff.level contour for every time step
@@ -35,15 +74,19 @@
 #			gyc <- yc[gCols]
 #		}
 		
-		pad <- rep(0, 15)
+	pad <- rep(0, 15)
 			
-		cResult <- .OpenCL("utilizationDistribution", length(gxc)*length(gyc),
-				as.integer(nrow(ts)),
-				as.double(c(ts[,1],pad)), as.double(c(ts[,2],pad)), as.double(c(ts[,3],pad+1)), as.double(c(ts[,4],pad)), 
-				as.double(gxc), as.double(gyc), as.integer(length(gyc)), as.integer(length(gxc)))
+	cResult <- .OpenCL("utilizationDistribution", length(gxc)*length(gyc),
+			as.integer(nrow(timesteps)),
+				as.double(c(timesteps[,1],pad)),
+				as.double(c(timesteps[,2],pad)),
+				as.double(c(timesteps[,3],pad+1)),
+				as.double(c(timesteps[,4],pad)), 
+			as.double(gxc), as.double(gyc),
+			as.integer(length(gyc)), as.integer(length(gxc)))
 
-		r <- raster
-		values(r) <- c(matrix(cResult, ncol(raster), byrow=T)[,nrow(raster):1])
+	r <- raster
+	values(r) <- c(matrix(cResult, ncol(raster), byrow=T)[,nrow(raster):1])
 		
 #		if (cutoff.level < 1) {
 #			# Remember the original dimensions of the requested grid and where the cut-out box fits in
@@ -54,13 +97,9 @@
 #					dimnames=(if (is.null(grid)) list(xc, yc) else NULL)
 #			)
 #		}
-		
-		UDs[[id]] <- r
-	}
 	
-	UDs <- stack(UDs)
-	UDs@crs <- tr@proj4string
-	return(UDs)
+	r@crs <- raster@crs
+	r
 }
 
 #"utilizationDistribution.byID" <- function(ud) {
@@ -139,41 +178,31 @@
 #	return(UDs)
 }
 
-".UDtimesteps" <- function(tr, timestepSize=60, groupBy=NULL) {
-	trs <- split(tr)
-	resultNames <- names(trs)
-	burstNames <- resultNames
-	if (!is.null(groupBy)) {
-		resultNames <- unique(tr@idData[,groupBy])
-		burstNames <- as.character(sapply(names(trs), function (n) { tr@idData[n, groupBy] }))
-	}
-	
-	result <- rep(list(matrix(numeric(0), ncol=4, 
-			dimnames=list(NULL, c('x','y','var','weight')))), length(resultNames))
-	names(result) <- resultNames
+".UDtimesteps" <- function(tr, timestepSize=60) {
+#	trs <- split(tr)
+#	resultNames <- names(trs)
+#	burstNames <- resultNames
+#	if (!is.null(groupBy)) {
+#		resultNames <- unique(tr@idData[,groupBy])
+#		burstNames <- as.character(sapply(names(trs), function (n) { tr@idData[n, groupBy] }))
+#	}
 
-	for (b in 1:length(trs)) {
-		burst <- trs[[b]]
-		
-		ts <- as.double(burst@timestamps)
-		data <- t(cbind(burst@coords, burst@variance, ts))
+	ts <- as.double(tr@timestamps)
+	data <- t(cbind(tr@coords, tr@variance, ts))
 				
-		# Align the time of each step to a multiple of timestepSize
-		timeLimits <- timestepSize*round(ts[c(1,nrow(burst))]/timestepSize)
-		nsteps <- as.integer((timeLimits[2] - timeLimits[1]) / timestepSize) + 1
-		timeStamps <- seq(timeLimits[1], timeLimits[2], length.out=nsteps)
+	# Align the time of each step to a multiple of timestepSize
+	timeLimits <- timestepSize*round(ts[c(1,nrow(tr))]/timestepSize)
+	nsteps <- as.integer((timeLimits[2] - timeLimits[1]) / timestepSize) + 1
+	timeStamps <- seq(timeLimits[1], timeLimits[2], length.out=nsteps)
 
-		timeSteps <- t(.Call("UDTimesteps", data, burst@diffusion, timeStamps))
+	timeSteps <- t(.Call("UDTimesteps", data, tr@diffusion, timeStamps))
 
-		dimnames(timeSteps) <- list(timeStamps, c('mu.x', 'mu.y', 'var', 'weight'))
-		
-		result[[burstNames[b]]] <- rbind(result[[burstNames[b]]], timeSteps)
-	}
+	dimnames(timeSteps) <- list(timeStamps, c('mu.x', 'mu.y', 'var', 'weight'))
 	
-	return(result)
+	return(timeSteps)
 }
 
-".defaultRaster" <- function(ext, grid.dim, padding) {
+".defaultRaster" <- function(ext, grid.dim, padding, proj4string=NA) {
 	# TODO: at a later stage, we could possibly remove this in favour of the
 	# implementation in the Move package
 	padding <- rep(padding, length.out=4)
@@ -196,5 +225,5 @@
 	
 	nrow <- ((ymax - ymin)/raster)
 	ncol <- ((xmax - xmin)/raster)
-	return(raster(extent(xmin, xmax, ymin, ymax), nrow, ncol))
+	raster(extent(xmin, xmax, ymin, ymax), nrow, ncol, crs=proj4string)
 }

@@ -20,7 +20,7 @@ setMethod(f = "diffusion<-",
 	if (!is.null(attr(value, 'grouping'))) {
 		# This is the result of a call to diffusionCoefficient
 		# with groupBy != NULL, expand the result
-		diffusion <- diffusion[attr(value, 'grouping')]
+		diffusion <- diffusion[as.character(attr(value, 'grouping'))]
 		names(diffusion) <- names(attr(value, 'grouping'))
 	}
 	
@@ -28,27 +28,37 @@ setMethod(f = "diffusion<-",
 	object
 })
 
-setGeneric("diffusionCoefficient", function(tr, groupBy=NULL, nsteps = 1000) standardGeneric("diffusionCoefficient"))
+setGeneric("diffusionCoefficient", function(tr, groupBy=NULL, nsteps=1000,
+	method=c("horne","new")) standardGeneric("diffusionCoefficient"))
 setMethod(f = "diffusionCoefficient",
 	signature = c(tr="MoveBB"),
-	definition = function (tr, nsteps = 1000) {
-		.diffusionCoefficient(list(tr), NULL, nsteps)
+	definition = function (tr, nsteps=1000, method=c("horne","new")) {
+		.diffusionCoefficient(list(tr), NULL, nsteps, method)
 })
 
 setMethod(f = "diffusionCoefficient",
 	signature = c(tr="MoveBBStack"),
-	definition = function (tr, groupBy=NULL, nsteps = 1000) {
-		.diffusionCoefficient(split(tr), groupBy, nsteps)
+	definition = function (tr, groupBy=NULL, nsteps=1000, method=c("horne","new")) {
+		.diffusionCoefficient(split(tr), groupBy, nsteps, method)
 })
-		
-		
-".diffusionCoefficient" <- function(trs, groupBy, nsteps) {
-		burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
+
+".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new")) {
+	method <- match.arg(method)
+	burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
+	switch(method,
+		horne=.diffusionCoefficient.horne(trs, burstNames, nsteps),
+		new  =.diffusionCoefficient.new  (trs, burstNames, nsteps)
+	)
+}
+
+".diffusionCoefficient.horne" <- function(trs, burstNames, nsteps) {
 		resultNames <- unique(burstNames)
 		
 		inputData <- list()
 		for (n in resultNames) { inputData[[n]] <- matrix(0, nrow=3, ncol=0) }
-		maxDiffCoeff <- rep(0, length(resultNames)) # For each element of the result, find a proper range to search
+
+		# For each element of the result, find a proper range to search
+		maxDiffCoeff <- rep(0, length(resultNames))
 		names(maxDiffCoeff) <- resultNames
 
 		# For each even numbered measurement in a burst (except the last if burst has even length):
@@ -65,7 +75,7 @@ setMethod(f = "diffusionCoefficient",
 				
 				bdata <- matrix(NA, nrow=3, ncol=floor((nrow(burst)-1)/2))
 		
-				fac <- burstNames[b]
+				fac <- as.character(burstNames[b])
 				# i runs over all even numbers that have a measurement before and after them
 				for (i in seq(2, nrow(burst)-1, by=2)) {
 					alpha <- (burst$date[i] - burst$date[i-1]) / (burst$date[i+1] - burst$date[i-1])
@@ -84,7 +94,6 @@ setMethod(f = "diffusionCoefficient",
 					maxVar <- 0.5 * bdata[1, i/2]
 					maxDiffCoeff[fac] <- max(maxDiffCoeff[fac], (maxVar-bdata[3, i/2])/bdata[2, i/2])
 				}
-				
 				inputData[[fac]] <- cbind(inputData[[fac]], bdata)
 			}
 		}
@@ -105,7 +114,7 @@ setMethod(f = "diffusionCoefficient",
 			}
 		}
 		
-		if (!is.null(groupBy)) {
+		if (any(names(burstNames) != burstNames)) { # groupBy != NULL
 			names(burstNames) <- names(trs)
 			attr(result, 'grouping') <- burstNames
 		}
@@ -114,20 +123,16 @@ setMethod(f = "diffusionCoefficient",
 
 # New method for estimating diffusion coefficient, based on displacement over
 # each bridge.
-"diffusionCoefficient.new" <- function (tr, byburst = FALSE, nsteps = 1000) {
-stop("Not yet adjusted to MoveBB class")
-	tr <- na.omit(tr)
-
-	resultNames <- unique(adehabitatLT::id(tr))
-	if (byburst) {
-		resultNames <- adehabitatLT::burst(tr)
-	}
-	
+".diffusionCoefficient.new" <- function(trs, burstNames, nsteps) {
+	resultNames <- unique(burstNames)
+		
 	inputData <- list()
 	for (n in resultNames) { inputData[[n]] <- matrix(0, nrow=3, ncol=0) }
-	maxDiffCoeff <- rep(0, length(resultNames)) # For each element of the result, find a proper range to search
-	names(maxDiffCoeff) <- resultNames
 
+	# For each element of the result, find a proper range to search
+	maxDiffCoeff <- rep(0, length(resultNames))
+	names(maxDiffCoeff) <- resultNames
+	
 	# For each relocation:
 	#  - compute the relevant parameters for the estimation of the diffusion coefficient:
 	#      - the displacement of this relocation
@@ -135,23 +140,22 @@ stop("Not yet adjusted to MoveBB class")
 	#  - compute the ML value for the diffusion coefficient looking only at one bridge.
 	#      When the diffusion coefficient gets larger than the maximum of these,
 	#      the likelihood of the observations becomes a decreasing function of the diffusion coefficient.
-	for (b in 1:length(tr)) {
-		burst <- tr[[b]]
+	for (b in 1:length(trs)) {
+		burst <- trs[[b]]
 
 		if (nrow(burst) >= 2) { # We can't estimate the likelihood for shorter bursts
-			burst$date <- as.double(burst$date) - min(as.double(burst$date))
+			burst$date <- as.double(burst@timestamps) - min(as.double(burst@timestamps))
 		
 			bdata <- matrix(NA, nrow=3, ncol=nrow(burst)-1)
 		
-			fac <- attr(burst, ifelse(byburst, "burst", "id"))
+			fac <- burstNames[b]
 			# i runs over all even numbers that have a measurement before and after them
-			for (i in 1:(nrow(burst)-1)) {			
-				# Squared distance from measured loc to estimated mean
-				bdata[1, i] <- 
-						(burst$x[i+1] - burst$x[i])^2 + (burst$y[i+1] - burst$y[i])^2
+			for (i in 1:(nrow(burst)-1)) {
+				# Squared distance between relocations
+				bdata[1, i] <- sum((burst@coords[i+1,] - burst@coords[i,])^2)
 				# The coefficients for a linear function mapping diffusion coefficient to variance
 				bdata[2, i] <- (burst$date[i+1]-burst$date[i])
-				bdata[3, i] <- burst$loc.var[i] + burst$loc.var[i+1]
+				bdata[3, i] <- burst@variance[i] + burst@variance[i+1]
 			
 				# Find the variance at which this bridge reaches its maximum likelihood
 				maxVar <- 0.5 * bdata[1, i]
