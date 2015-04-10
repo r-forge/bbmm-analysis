@@ -33,18 +33,18 @@
 #	if (class(dev) != "clDeviceID") {
 #		stop("dev must be an instance of clDeviceID, obtained from oclDevices()")
 #	}
-	unlockBinding(".OpenCL_dev", loadNamespace("movementAnalysis"))
-	unlockBinding(".OpenCL_kernels", loadNamespace("movementAnalysis"))
+	unlockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+	unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
 	.OpenCL_dev <<- dev
 	.OpenCL_kernels <<- NA # kernels will need to be rebuilt for this device
-	lockBinding(".OpenCL_dev", loadNamespace("movementAnalysis"))
-	lockBinding(".OpenCL_kernels", loadNamespace("movementAnalysis"))
+	lockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+	lockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
 }
 
 # get an OpenCL kernel with the provided name, if it exists
 ".OpenCL_getKernel" <- function(name) {
 	if (any(is.na(.OpenCL_kernels))) {
-		unlockBinding(".OpenCL_kernels", loadNamespace("movementAnalysis"))
+		unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
 	
 		if (class(.OpenCL_dev) == "clDeviceID") {
 			oldWd <- getwd()
@@ -72,7 +72,8 @@
 			.OpenCL_kernels <<- list()
 		}
 		
-		lockBinding(".OpenCL_kernels", loadNamespace("movementAnalysis"))
+		lockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
+		print(names(.OpenCL_kernels))
 	}
 	return(tryCatch(.OpenCL_kernels[[name]], error=function(e) { NULL }))
 }
@@ -83,7 +84,7 @@
 	if (!is.null(kernel)) {
 		return(oclRun(kernel, size, ...))
 	} else {
-		cResult <- .C(kernelName, double(size), size, ..., PACKAGE="movementAnalysis")
+		cResult <- .C(kernelName, double(size), size, ..., PACKAGE=getPackageName())
 		return(cResult[[1]])
 	}
 }

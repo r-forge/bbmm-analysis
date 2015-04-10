@@ -14,7 +14,7 @@ encounterDistribution(tr, threshold, grid=NULL, timestepSize = 60,
 \arguments{
   \item{tr}{The trajectory for which to compute the UD}
   \item{threshold}{The maximum distance at which an encounter occurs}
-  \item{grid}{a grid of class \code{\link{asc}}}
+  \item{grid}{a grid of class \code{\link[adehabitat]{asc}}}
   \item{timestepSize}{The difference between consecutive time steps, in seconds}
   \item{xc}{The x coordinates of the vertical grid lines}
   \item{yc}{The y coordinates of the horizontal grid lines}

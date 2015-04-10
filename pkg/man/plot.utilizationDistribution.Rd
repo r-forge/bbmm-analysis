@@ -8,14 +8,14 @@ Plot or draw contours for utilization distributions.
 Plots the given utilization distribution, either by applying a colourmap to the values or by drawing contours where the value passes certain levels.
 }
 \usage{
-\method{plot}{utilizationDistribution}(ud, col = hcl(1:length(ud) * 360/length(ud), 50, 70),
+\method{plot}{utilizationDistribution}(x, col = hcl(1:length(x) * 360/length(x), 50, 70),
     xlim = NULL, ylim = NULL, add = FALSE, ...)
-\method{contour}{utilizationDistribution}(ud, levels = 0.99, col = col=hcl(1:length(ud) * 360/length(ud), l=35), 
+\method{contour}{utilizationDistribution}(x, levels = 0.99, col = hcl(1:length(x) * 360/length(x), l=35), 
     xlim = NULL, ylim = NULL, labels = levels, add = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{ud}{The utilization distribution to plot.}
+  \item{x}{The utilization distribution to plot.}
   \item{col}{The colours to use in the plot. May be a vector of colours or a list containing the colour scheme for each ID.}
   \item{xlim}{The minimum and maximum x coordinate to plot.}
   \item{ylim}{The minimum and maximum y coordinate to plot.}
@@ -29,21 +29,19 @@ If \code{col} is a vector, it is assumed to contain a colour code for each grid 
 
 If \code{col} is a list, it is assumed to contain one element for each UD to plot, specifying exactly which colours to use in that plot.
 }
-\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\note{
-%%  ~~further notes~~
-}
+%\value{
+%%%  ~Describe the value returned
+%%%  If it is a LIST, use
+%%%  \item{comp1 }{Description of 'comp1'}
+%%%  \item{comp2 }{Description of 'comp2'}
+%%% ...
+%}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{utilizationDistribution}}
 }
 \examples{
 data("example_data", package="movementAnalysis")

@@ -1,12 +1,11 @@
 # Provides location information for each id in the trajectory at the given time(s)
 position <- function(tr, time) {
-	tr <- bbFilterNA(tr) # This function does not like missing values
+	tr <- na.omit(tr) # This function does not like missing values
 
 	if (inherits(time, "POSIXct")) {
 		time <- as.double(time)
 	}
 	
-	tr <- bbFilterNA(tr)
 	ids <- unique(id(tr))
 
 	res <- sapply(time, function(t) {

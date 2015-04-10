@@ -61,3 +61,4 @@ __kernel void encounterUD (__global double *result, const int resultSize,
 		idx += get_global_size(0);
 	}
 }
+

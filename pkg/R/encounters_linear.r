@@ -3,7 +3,7 @@
 }
 
 ".fn_mean_distance" <- function(value, distr) {
-	distr$para[1] # parameters are noncentrality (i.e. mean distance) and variance
+	distr$para[1] # parameters are noncentrality (i.e. mean distance) and std dev
 }
 
 "encounter" <- function(d, tr, time) {

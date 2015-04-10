@@ -1,10 +1,14 @@
 \name{as.bbtraj}
 \alias{as.bbtraj}
 \alias{bbtraj}
-\alias{bbFilterNA}
 \alias{diffusionCoefficient}
+
+\alias{[.bbtraj}
+\alias{[<-.bbtraj}
+\alias{na.omit.bbtraj}
+\alias{bbFilterNA}
 %\alias{print.bbtraj}
-%\alias{summary.bbtraj}
+\alias{summary.bbtraj}
 \docType{data}
 \title{
 %%   ~~ data name/kind ... ~~
@@ -12,15 +16,15 @@ Working with Trajectories in 2D Space: the Class bbtraj
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of the dataset. ~~
-The class \code{bbtraj} stores trajectories of animals, similar to the class \code{\link{ltraj}} in package \code{\link{adehabitatLT}}. The difference is that a bbtraj object also stores the variances used when dealing with Brownian bridges. When converting a data set to an object of this class (using the function \code{as.bbtraj}) the most likely value for the diffusion coefficient is calculated and stored in the resulting object.
-\code{bbFilterNA} filters the missing measurements from a trajectory, removing bursts that are empty after this filtering.
+The class \code{bbtraj} stores trajectories of animals, similar to the class \code{\link{ltraj}} in package \code{adehabitatLT}. The difference is that a bbtraj object also stores the variances used when dealing with Brownian bridges. When converting a data set to an object of this class (using the function \code{as.bbtraj}) the most likely value for the diffusion coefficient is calculated and stored in the resulting object.
+\code{na.omit} filters the missing measurements from a trajectory, removing bursts that are empty after this filtering. All information that is derived from multiple measurements is recomputed. \code{bbFilterNA} is a deprecated alias for \code{na.omit}.
 }
 \usage{
 as.bbtraj(xys, date, id, burst = id, typeII = TRUE,
           slsp =  c("remove", "missing"),
           infolocs = data.frame(pkey = paste(id, date, sep=".")),
           make.regular=FALSE)
-bbFilterNA(tr)
+\method{na.omit}{bbtraj}(object, slsp=c("remove", "missing"), ...)
 diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -43,6 +47,8 @@ diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
     turning angles (for details, see \code{\link{as.ltraj}})}
   \item{infolocs}{ If not \code{NULL}, a data.frame containing extra information about the relocations.}
   \item{make.regular}{Either \code{FALSE}, or a list specifying the arguments to \code{\link{setNA}} and \code{\link{sett0}}.}
+  \item{object}{The trajectory from which to filter missing values.}
+  \item{...}{Further arguments that might be required by specialized methods.}
   \item{tr}{A trajectory of class \code{ltraj} or \code{bbtraj}}
   \item{byburst}{A logical indicating whether a different diffusion coefficient should be estimated for each burst.}
   \item{nsteps}{The number of different values for the diffusion coefficient to test. The range in which the value can be is determined automatically.}
@@ -88,7 +94,7 @@ as these functions are used to make the resulting trajectory regular.
   Missing values are returned otherwise.}
   
   \code{diffusionCoefficient} returns a vector containing the optimal values
-  for each id or burst.
+  for each ID or burst.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -100,7 +106,7 @@ using Brownian bridges. \emph{Ecology 88}, 9 (2007), 2354--2363.
 
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-\code{\link{ltraj}}, \code{\link{adehabitatLT}}
+\code{\link[adehabitatLT]{ltraj}}
 }
 \examples{
 data("example_data", package="movementAnalysis")
@@ -116,6 +122,9 @@ tr <- as.bbtraj(data.frame(x=example_data$X, y=example_data$Y, var=example_data$
     date=example_data$DateTime, id=example_data$GroupID, burst=example_data$GroupDayNo,
     make.regular=list(date.ref=strptime("00:00", "\%H:\%M"), dt=1, units="hour"))
 is.regular(tr)
+
+# Extract a single burst from the trajectory
+tr[["BD_1417"]]
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

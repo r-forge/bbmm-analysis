@@ -31,9 +31,6 @@ in the usual way for the Brownian bridge movement model.
 %% ...
 An array indexed by ID, parameter name, time.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

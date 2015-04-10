@@ -59,7 +59,11 @@
 		for (b in activeBursts) {
 			# b overlaps with burst in time, so compute encounter durations
 			resultSize <- resultSize+1
-			result[resultSize,1:4] <- c(attr(b, "id"), attr(burst, "id"), attr(b, "burst"), attr(burst, "burst"))
+			if (attr(b, "id") < attr(burst, "id")) {
+				result[resultSize,1:4] <- c(attr(b, "id"), attr(burst, "id"), attr(b, "burst"), attr(burst, "burst"))
+			} else {
+				result[resultSize,1:4] <- c(attr(burst, "id"), attr(b, "id"), attr(burst, "burst"), attr(b, "burst"))
+			}
 			result[resultSize,model] <- sapply(model, function(m) {
 				.burstEncounterDuration(burst, b, threshold, timestepSize, m) 
 			})
@@ -96,7 +100,7 @@
 	b2 <- b2[!is.na(b2$loc.var),]
 	data2 <- c(t(b2)) # flatten into row-major vector
 
-	cResult <- .C("encounterLinearIntervals",
+	cResult <- .C(implementations[model],
 			double(1), as.double(dist),
 			as.integer(nrow(b1)), as.double(data1),
 			as.integer(nrow(b2)), as.double(data2),

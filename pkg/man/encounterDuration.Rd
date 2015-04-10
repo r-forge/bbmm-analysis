@@ -25,6 +25,7 @@ encounterDurationById(encounterDurationByBurst)
   	If \code{FALSE}, the result contains encounter durations between pairs of IDs.}
   \item{timestepSize}{If a movement model requires numerical integration in the time
   	dimension, this is the size of each time step.}
+  \item{encounterDurationByBurst}{The result of calling \code{encounterDuration} with \code{byburst=TRUE}.}
 }
 \details{
 Since the duration of encounters is a random variable in the Brownian bridge
@@ -56,7 +57,7 @@ the two IDs and the movement model. The entries in the array are again of class
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{bbtraj}}
 }
 \examples{
 data("example_data", package="movementAnalysis")

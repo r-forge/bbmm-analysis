@@ -1,21 +1,21 @@
-plot.utilizationDistribution <- function (ud, col=hcl(1:length(ud) * 360/length(ud), 50, 70),
+plot.utilizationDistribution <- function (x, col=hcl(1:length(x) * 360/length(x), 50, 70),
 		xlim=NULL, ylim=NULL, add=FALSE, ...) {
-	if (length(ud) == 0) { return(NULL) }
+	if (length(x) == 0) { return(NULL) }
 		
-	if (inherits(ud[[1]], "asc")) {
-		coords <- sapply(ud, getXYcoords)
+	if (inherits(x[[1]], "asc")) {
+		coords <- sapply(x, adehabitat::getXYcoords)
 		xc <- coords['x',1][[1]]
 		yc <- coords['y',1][[1]]
 	} else {
-		xc <- as.double(rownames(ud[[1]]))
-		yc <- as.double(colnames(ud[[1]]))
+		xc <- as.double(rownames(x[[1]]))
+		yc <- as.double(colnames(x[[1]]))
 	}
 		
 	if (is.null(xlim)) { xlim <- range(xc) }
 	if (is.null(ylim)) { ylim <- range(yc) }
 
-	if (!inherits(ud, "utilizationDistribution"))
-        stop("ud should be an object of class utilizationDistribution")
+	if (!inherits(x, "utilizationDistribution"))
+        stop("x should be an object of class utilizationDistribution")
 
 	if (!is.list(col)) {
 		col <- lapply(as.data.frame(col2rgb(col)), function(col) {
@@ -23,13 +23,13 @@ plot.utilizationDistribution <- function (ud, col=hcl(1:length(ud) * 360/length(
 		})
 	}
 	# recycle the provided colours if necessary
-	col <- rep(col, length.out=length(ud))
+	col <- rep(col, length.out=length(x))
 	
 	if (add != TRUE) {
 		plot(1, 1, type = "n", xlim=xlim, ylim = ylim, ...)
 	}
-	for (i in 1:length(ud)) {
-		u <- ud[[i]]
+	for (i in 1:length(x)) {
+		u <- x[[i]]
 		if (max(u) > 0) {
 			image(xc, yc, unclass(u), col=col[[i]], add=T)
 		}

@@ -34,7 +34,7 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 		stop("burst should be of the same length as xys, or of length 1")
 	burst <- as.character(burst)
 
-	## Verification that there is only one burst per id
+	## Verification that there is only one id per burst
 	id1 <- factor(id)
 	burst1 <- factor(burst)
 	if (!all(apply(table(id1,burst1)>0,2,sum)==1))
@@ -62,54 +62,8 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	                        function(x) { length(unique(x$date))!=length(x$date) })))
 	if (rr)
 		stop("non unique dates for a given burst")
-
-
-
-	## Descriptive parameters
-	foo <- function(x) {
-		x1 <- x[-1, ]
-		x2 <- x[-nrow(x), ]
-		dist <- c(sqrt((x1$x - x2$x)^2 + (x1$y - x2$y)^2),NA)
-		R2n <- (x$x - x$x[1])^2 + (x$y - x$y[1])^2
-		dt <- c(unclass(x1$date) - unclass(x2$date), NA)
-		dx <- c(x1$x - x2$x, NA)
-		dy <- c(x1$y - x2$y, NA)
-		abs.angle <- ifelse(dist<1e-07,NA,atan2(dy,dx))
-		## absolute angle = NA if dx==dy==0
-		so <- cbind.data.frame(dx=dx, dy=dy, dist=dist,
-		                       dt=dt, R2n=R2n, abs.angle=abs.angle)
-		return(so)
-	}
-
-	speed <- lapply(res, foo)
-	res <- lapply(1:length(res), function(i) cbind(res[[i]],speed[[i]]))
-
-	## The relative angle
-	ang.rel <- function(df,slspi=slsp) {
-		ang1 <- df$abs.angle[-nrow(df)] # angle i-1
-		ang2 <- df$abs.angle[-1] # angle i
-
-		if(slspi=="remove"){
-			dist <- c(sqrt((df[-nrow(df),"x"] - df[-1,"x"])^2 +
-			               (df[-nrow(df),"y"] - df[-1,"y"])^2),NA)
-			wh.na <- which(dist<1e-7)
-			if(length(wh.na)>0){
-				no.na <- (1:length(ang1))[!(1:length(ang1)) %in% wh.na]
-				for (i in wh.na){
-					indx <- no.na[no.na<i]
-					ang1[i] <- ifelse(length(indx)==0,NA,ang1[max(indx)])
-				}
-			}
-		}
-		res <- ang2-ang1
-		res <- ifelse(res <= (-pi), 2*pi+res,res)
-		res <- ifelse(res > pi, res -2*pi,res)
-		return(c(NA,res))
-	}
-
-	rel.angle <- lapply(res, ang.rel)
-	res <- lapply(1:length(res),
-	              function(i) data.frame(res[[i]], rel.angle=rel.angle[[i]]))
+	# Add extra information about the relocations
+	res <- lapply(res, .bbtraj.extra.info, slsp)
 	res <- lapply(1:length(res), function(i) {
 		x <- res[[i]]
 		attr(x, "id") <- as.character(liid[[i]][1])
@@ -121,8 +75,6 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	class(res) <- c("bbtraj","ltraj","list")
 	attr(res,"typeII") <- typeII
 	attr(res,"regular") <- is.regular(res)
-	
-	
 	
 	s2 <- diffusionCoefficient(res)
 	res <- lapply(res, function(b) {
@@ -165,8 +117,56 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	class(res) <- c("bbtraj","ltraj","list")
 	attr(res,"typeII") <- typeII
 	attr(res,"regular") <- is.regular(res)
+	names(res) <- sapply(res, function(burst) { attr(burst, "burst") })
 
 	return(res)
+}
+
+# Compute the derived quantities for the relocations in a bridge.
+# Derived quantities include: distance, daily displacement, duration, direction
+".bbtraj.extra.info" <- function(burst, slspi) {
+	if (nrow(burst) == 0) { return(burst) }
+
+	## Descriptive parameters
+	x1 <- burst[-1, ]
+	x2 <- burst[-nrow(burst), ]
+	dist <- c(sqrt((x1$x - x2$x)^2 + (x1$y - x2$y)^2),NA)        # Length of bridge
+	
+	first.row <- head(rbind(
+			na.omit(burst[,c("x","y","loc.var")]),
+			data.frame(x=NA, y=NA, loc.var=NA)), 1)  # First row with an actual measurement, if any exists
+	R2n <- (burst$x - first.row$x)^2 + (burst$y - first.row$y)^2 # Squared displacement from burst start
+	dt <- c(unclass(x1$date) - unclass(x2$date), NA)             # Duration of last bridge
+	dx <- c(x1$x - x2$x, NA)                                     # Displacement on x-axis of bridge
+	dy <- c(x1$y - x2$y, NA)                                     # Displacement on y-axis of bridge
+	abs.angle <- ifelse(dist<1e-07,NA,atan2(dy,dx))              # Bridge direction: Radians from positive x-axis
+	## absolute angle = NA if dx==dy==0
+	## The relative angle, i.e. change in direction in the range (-pi, pi]
+	ang1 <- abs.angle[-nrow(burst)] # angle i-1
+	ang2 <- abs.angle[-1] # angle i
+
+	if(slspi=="remove"){
+		wh.na <- which(dist<1e-7)
+		if(length(wh.na)>0){
+			no.na <- (1:length(ang1))[!(1:length(ang1)) %in% wh.na]
+			for (i in wh.na){
+				indx <- no.na[no.na<i]
+				ang1[i] <- ifelse(length(indx)==0,NA,ang1[max(indx)])
+			}
+		}
+	}
+	ra <- ang2-ang1
+	ra <- ifelse(ra <= (-pi), 2*pi+ra,ra)
+	ra <- ifelse(ra > pi, ra -2*pi,ra)
+	ra <- c(NA, ra)
+
+	so <- cbind.data.frame(dx=dx, dy=dy, dist=dist,
+                       dt=dt, R2n=R2n, abs.angle=abs.angle, rel.angle=ra)
+	b <- cbind(burst[,!colnames(burst) %in% colnames(so)], so)
+	attr(b, "id") <- attr(burst,"id")
+	attr(b, "burst") <- attr(burst,"burst")
+	
+	return(b)
 }
 
 "[.bbtraj" <- function(x, i, id, burst)
@@ -191,93 +191,93 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 	return(y)
 }
 
-"diffusionCoefficient" <- function (tr, byburst = FALSE, nsteps = 1000) {
-	tr <- bbFilterNA(tr)
+#"[[.bbtraj" <- function(x, i, exact=TRUE) {
+#	# If i is a string, regard it as a burst name
+#	if (is.character(i)) {
+#		burst.name <- i
+#		i <- which(sapply(x, function(b) { attr(b, 'burst') }) == i)
+#		if (length(i) == 0) { stop(paste("Unknown burst name", burst.name)) }
+#	}
 
-	resultNames <- unique(id(tr))
-	if (byburst) {
-		resultNames <- burst(tr)
-	}
-	
-	inputData <- list()
-	for (n in resultNames) { inputData[[n]] <- matrix(0, nrow=3, ncol=0) }
-	maxDiffCoeff <- rep(0, length(resultNames)) # For each element of the result, find a proper range to search
-	names(maxDiffCoeff) <- resultNames
+#	NextMethod("[[")
+#}
 
-	# For each even numbered measurement in a burst (except the last if burst has even length):
-	#  - compute the relevant parameters for the estimation of the diffusion coefficient:
-	#      - the distance between the observation and the mean derived from the neighbouring observations
-	#      - parameters used to compute the location variance from the diffusion coefficient
-	#  - compute the ML value for the diffusion coefficient looking only at one bridge.
-	#      When the diffusion coefficient gets larger than the maximum of these,
-	#      the likelihood of the observations becomes a decreasing function of the diffusion coefficient.
-	for (b in 1:length(tr)) {
-		burst <- tr[[b]]
+"na.omit.bbtraj" <- function(object, slsp=c("remove", "missing"), ...) {
+	slsp <- match.arg(slsp)
 
-		if (nrow(burst) >= 3) { # We can't estimate the likelihood for shorter bursts
-			burst$date <- as.double(burst$date) - min(as.double(burst$date))
-		
-			bdata <- matrix(NA, nrow=3, ncol=floor((nrow(burst)-1)/2))
-		
-			fac <- attr(burst, ifelse(byburst, "burst", "id"))
-			# i runs over all even numbers that have a measurement before and after them
-			for (i in seq(2, nrow(burst)-1, by=2)) {
-				alpha <- (burst$date[i] - burst$date[i-1]) / (burst$date[i+1] - burst$date[i-1])
-			
-				# Squared distance from measured loc to estimated mean
-				bdata[1, i/2] <- 
-						(burst$x[i] - (1-alpha) * burst$x[i-1] - alpha * burst$x[i+1])^2 +
-						(burst$y[i] - (1-alpha) * burst$y[i-1] - alpha * burst$y[i+1])^2
-				# The coefficients for a linear function mapping diffusion coefficient to variance
-				bdata[2, i/2] <- (burst$date[i+1]-burst$date[i-1]) * alpha * (1-alpha)
-				bdata[3, i/2] <- (1-alpha)^2*burst$loc.var[i-1] + alpha^2*burst$loc.var[i+1]
-			
-				# Find the variance at which this bridge reaches its maximum likelihood
-				maxVar <- 0.5 * bdata[1, i/2]
-				maxDiffCoeff[fac] <- max(maxDiffCoeff[fac], (maxVar-bdata[3, i/2])/bdata[2, i/2])
-			}
-			
-			inputData[[fac]] <- cbind(inputData[[fac]], bdata)
-		}
-	}
-	
-	result <- rep(NA, length(resultNames))
-	names(result) <- resultNames
-	for(fac in names(result)) {
-		if (maxDiffCoeff[fac] <= 0) {
-			# We already know that the ML is achieved for diff.coeff 0
-			result[fac] <- 0
-		} else {
-			candidates <- seq(0,maxDiffCoeff[fac], length.out=nsteps)
-		
-			cResult <- .C("diffusion_static", double(1),
-					c(inputData[[fac]]), ncol(inputData[[fac]]),
-					candidates, length(candidates), PACKAGE="movementAnalysis")
-			result[fac] <- cResult[[1]]
-		}
-	}
-	
-	return(result)
-}
-
-"bbFilterNA" <- function(tr) {
 	# Filter out all rows with NA in all bursts
-	trNew <- lapply(tr, function(burst) {
+	trNew <- lapply(object, function(burst) {
 		filter <- (!is.na(burst$x)
 			& !is.na(burst$y)
 			& !is.na(burst$diff.coeff)
 			& !is.na(burst$loc.var))
 	
-		newBurst <- burst[filter,]
-		atts <- attributes(burst)
-		attributes(newBurst) <- atts[which(names(atts) != "row.names")]
-		names <- atts[["row.names"]]
-		rownames(newBurst) <- names[filter]
+		# Don't bother recomputing everything if we don't delete any rows
+		if (all(filter)) { return(burst) }
 		
+		newBurst <- .bbtraj.extra.info(burst[filter,], slsp)
+		rn <- split(rownames(burst), filter)
+		rownames(newBurst) <- rn$`TRUE`
+		
+		# Store the information about the removed rows
+		rm.rows <- rn$`FALSE`
+		names(rm.rows) <- rn$`FALSE`
+		attr(rm.rows, "class") <- "omit"
+		attr(newBurst, "na.action") <- rm.rows
 		return(newBurst)
 	})
-	trNew <- trNew[unlist(sapply(trNew, function(b) { nrow(b) > 0}))]
-	attributes(trNew) <- attributes(tr)
-	class(trNew) <- class(tr)
+	keepBursts <- unlist(sapply(trNew, function(b) { nrow(b) > 0}))
+	trNew <- trNew[keepBursts]
+	attributes(trNew) <- attributes(object)[names(attributes(object)) != "names"]
+	names(trNew) <- names(object)[keepBursts]
+	class(trNew) <- class(object)
 	return(trNew)
+}
+"bbFilterNA" <- na.omit.bbtraj # Keep this one for backwards compatibility
+
+summary.bbtraj <- function(object, ..., units.direction="radian") {
+	if (!inherits(object, "bbtraj"))
+      stop("object should be of class \"bbtraj\"")
+    res <- summary.ltraj(object,...)
+    if (attr(object,"typeII")) {
+    	object <- na.omit(object) # Remove the NAs already, then the call inside the functions has hardly any overhead
+    	djl <- djl(object)
+    	dist <- displacement.distance(object)
+    	dir <- displacement.direction(object, units.direction)
+    	res <- cbind(res, DJL=djl, displ.dist=dist, displ.dir=dir)
+    }
+    res
+}
+
+"djl" <- function(tr) {
+	res <- sapply(na.omit(tr), function(burst) {
+		sum(burst$dist, na.rm=T)
+	})
+	names(res) <- names(tr)
+	res
+}
+
+"displacement.distance" <- function(tr) {
+	res <- sapply(na.omit(tr), function(burst) {
+		sqrt(burst$R2n[nrow(burst)])
+	})
+	names(res) <- names(tr)
+	res
+}
+
+"displacement.direction" <- function(tr, units=c("radian","degree","compass")) {
+	units <- match.arg(units)
+	res <- sapply(na.omit(tr), function(burst) {
+		atan2(burst$y[nrow(burst)] - burst$y[1], burst$x[nrow(burst)] - burst$x[1])
+	})
+	if (units == "degree" || units == "compass") {
+		res <- res * 180 / pi
+	}
+	if (units == "compass") {
+		# A compass has reversed direction and is rotated by 90 degrees
+		# Rotate by 450 degrees to make sure every value is positive before the mod operation
+		res <- (450 - res) %% 360
+	}
+	names(res) <- names(tr)
+	res
 }
