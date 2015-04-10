@@ -25,9 +25,17 @@ encounterDistribution(tr, threshold, grid=NULL, timestepSize = 60,
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-One can specify the grid in two ways. If \code{grid} is set, the coordinates of
-the grid lines are derived from there. Otherwise, these coordinates have to be
-specified in the parameters \code{xc} and \code{yc}.
+One can specify the grid in three ways:
+\itemize{
+	\item If \code{grid} is set, the coordinates of
+	the grid lines are derived from there. 
+	\item These coordinates can also be specified in the parameters \code{xc} and \code{yc}.
+	\item Otherwise, the grid is determined automatically. The grid then ranges over
+	a bounding box of all measurements, extended on each side by a specified fraction of the range.
+	The number of grid cells can be controlled via \code{grid.dim}. The amount by which
+	the grid is extended is controlled via \code{grid.pad}, which may be a vector specifying
+	the extension on top,right,bottom,left respectively. It is recycled as usual.
+}
 }
 \value{
 The return value is a list, indexed by two IDs.

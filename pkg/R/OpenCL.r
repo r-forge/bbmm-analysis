@@ -3,16 +3,20 @@
 
 # Selects an OpenCL device if possible, based on heuristics
 ".OpenCL_init" <- function() {
-	if (require(OpenCL)) {
-		devices <- sapply(oclPlatforms(), oclDevices)
+	if (try(packageVersion('OpenCL'), TRUE) == '0.1.3-1' && require(OpenCL)) {
+		devices <- sapply(tryCatch(oclPlatforms(), error=function(e) {
+			print(e$message)
+			NULL
+		}), oclDevices)
 		devType <- lapply(devices, function (d) { oclInfo(d, full=TRUE)$TYPE })
 
 		# Policy for selecting devices: There is an order of preference
 		# based on the reported device type. Use the first device of the most
 		# preferred type that has any devices available.
+		dev <- NULL
 		for (t in c("GPU", "ACCELERATOR", "CPU", "DEFAULT")) {
 			t <- paste("CL_DEVICE_TYPE_", t, sep="")
-			devs <- devices[sapply(devType, function (dt) { any(dt == t) })]
+			devs <- devices[vapply(devType, function (dt) { any(dt == t) }, logical(1))]
 			if (length(devs) > 0) {
 				d <- devs[[1]]
 				dev <- d
@@ -59,7 +63,6 @@
 				paste(readLines(f), collapse="\n")
 			}, USE.NAMES=FALSE)
 			source <- paste(c("#pragma OPENCL EXTENSION cl_khr_fp64 : enable", source), collapse="\n\n")
-			cat(source, file='/home/stef/School/TUe_CSE/2IM91_Master_project/SVN/src/OpenCL_source.cl')
 
 			.OpenCL_kernels <<- oclSimpleKernel(.OpenCL_dev, NA, source, "double") # Set precision here
 			
@@ -75,14 +78,14 @@
 }
 
 ".OpenCL" <- function(kernelName, size, ...) {
-	#OpenCL is disabled for now
-	#kernel <- .OpenCL_getKernel(kernelName)
-	#if (!is.null(kernel)) {
-	#	return(oclRun(kernel, size, ...))
-	#} else {
+	# OpenCL is disabled for now
+	kernel <- .OpenCL_getKernel(kernelName)
+	if (!is.null(kernel)) {
+		return(oclRun(kernel, size, ...))
+	} else {
 		cResult <- .C(kernelName, double(size), size, ..., PACKAGE="movementAnalysis")
 		return(cResult[[1]])
-	#}
+	}
 }
 
 OpenCL_test <- function(nu, sd, x) {

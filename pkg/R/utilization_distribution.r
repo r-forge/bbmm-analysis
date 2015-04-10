@@ -29,10 +29,6 @@
 				as.integer(nrow(ts)),
 				as.double(c(ts[,1],pad)), as.double(c(ts[,2],pad)), as.double(c(ts[,3],pad+1)), as.double(c(ts[,4],pad)), 
 				as.double(xc), as.double(yc), as.integer(length(yc)), as.integer(length(xc)))
-		
-#		cResult <- .OpenCL("getUD", length(xc)*length(yc),
-#			as.integer(length(timesteps)/4), as.double(timesteps),
-#			as.double(xc), as.double(yc), as.integer(length(yc)), as.integer(length(xc)))
 
 		res <- matrix(cResult, nrow=length(xc), byrow=TRUE)			
 		
@@ -143,17 +139,18 @@
 }
 
 ".defaultGrid" <- function(tr, grid.dim, padding) {
+	padding <- rep(padding, length.out=4)
+
 	xr <- range(unlist(sapply(tr, function(b) { b$x })))
-	xpad <- padding * (xr[2]-xr[1])
-	xr <- c(xr[1]-xpad, xr[2]+xpad)
+	xpad <- padding[c(2,4)] * (xr[2]-xr[1])
+	xr <- c(xr[1]-xpad[2], xr[2]+xpad[1])
 	
 	yr <- range(unlist(sapply(tr, function(b) { b$y })))
-	ypad <- padding * (yr[2]-yr[1])
-	yr <- c(yr[1]-ypad, yr[2]+ypad)
+	ypad <- padding[c(1,3)] * (yr[2]-yr[1])
+	yr <- c(yr[1]-ypad[2], yr[2]+ypad[1])
 
 	cellSize <- min(xr[2] - xr[1], yr[2]-yr[1]) / grid.dim
 	
-	print(paste("Using default grid: bounding box for trajectory extended by", padding, "on each side."))
 	return(list(
 		x=seq(xr[1], xr[2], by=cellSize),
 		y=seq(yr[1], yr[2], by=cellSize)

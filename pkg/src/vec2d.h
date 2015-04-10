@@ -1,6 +1,8 @@
 #ifndef __VEC2D_H__
 #define __VEC2D_H__
 
+#include <math.h>
+
 template<class T>
 class Vec2D {
 public:
