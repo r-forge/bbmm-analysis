@@ -1,12 +1,12 @@
 Package: movementAnalysis
-Version: 0.6
-Date: 2013/04/18
+Version: 0.6.1
+Date: 2013/06/18
 Depends: R (>= 2.14.0), adehabitat, adehabitatLT, sp, maptools, lmomco
 Suggests: OpenCL (>= 0.1.3.1)
 Title: Analysis of trajectory data using linear or Brownian motion
         model
 Author: Stef Sijben
 Description: Analysis of trajectory data. Contains functions for detecting movement patterns using different movement models, including the linear motion model and the Brownian bridge motion model (BBMM).
-Maintainer: Stef Sijben <s.m.a.sijben@student.tue.nl>
+Maintainer: Stef Sijben <Stef.Sijben@ruhr-uni-bochum.de>
 License: GPL (>= 3)
-Packaged: 2013-04-18 13:14:40 UTC; stef
+Packaged: 2013-06-18 15:43:13 UTC; stef

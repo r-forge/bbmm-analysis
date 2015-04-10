@@ -23,6 +23,10 @@
 		yc <- g$y
 	}
 	
+	if (time.scale <= 0) {
+		stop("time.scale must be positive")
+	}
+	
 	lapply(split(tr), function(tr.id) {
 		r <- matrix(0, length(xc), length(yc))
 		cResult <- list(r, r)
@@ -30,11 +34,18 @@
 			burst <- burst[,c("x","y","diff.coeff","loc.var","date")]
 			data <- c(t(burst)) # flatten into vector in row-major order
 
+			# First, compute average speeds over intervals starting at the fixed points
 			cResult <- .C("speedDistribution", 
 					as.double(cResult[[1]]), as.double(cResult[[2]]),
 					as.double(data), as.integer(nrow(burst)),
 					as.double(xc), as.double(yc), as.integer(length(xc)), as.integer(length(yc)),
 					as.double(timestepSize), as.double(0), as.double(time.scale))
+			# Then, compute average speeds over intervals ending at the fixed points
+			cResult <- .C("speedDistribution", 
+					as.double(cResult[[1]]), as.double(cResult[[2]]),
+					as.double(data), as.integer(nrow(burst)),
+					as.double(xc), as.double(yc), as.integer(length(xc)), as.integer(length(yc)),
+					as.double(timestepSize), as.double(-time.scale), as.double(0))
 		}
 		matrix(cResult[[1]] / cResult[[2]], length(xc), length(yc))
 	})

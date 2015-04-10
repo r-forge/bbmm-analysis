@@ -202,7 +202,7 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 #	NextMethod("[[")
 #}
 
-"na.omit.bbtraj" <- function(object, slsp=c("remove", "missing"), ...) {
+"na.omit.bbtraj" <- function(object, slsp=c("remove", "missing"), drop.bursts=TRUE, ...) {
 	slsp <- match.arg(slsp)
 
 	# Filter out all rows with NA in all bursts
@@ -232,7 +232,7 @@ as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
 		attr(newBurst, "na.action") <- rm.rows
 		return(newBurst)
 	})
-	keepBursts <- unlist(sapply(trNew, function(b) { nrow(b) > 0}))
+	keepBursts <- if (drop.bursts) { sapply(trNew, nrow) > 0 } else { rep(TRUE, length(trNew)) }
 	trNew <- trNew[keepBursts]
 	attributes(trNew) <- attributes(object)[names(attributes(object)) != "names"]
 	names(trNew) <- names(object)[keepBursts]
@@ -250,7 +250,7 @@ summary.bbtraj <- function(object, ..., units.direction="radian") {
       stop("object should be of class \"bbtraj\"")
     res <- summary.ltraj(object,...)
     if (attr(object,"typeII")) {
-    	object <- na.omit(object) # Remove the NAs already, then the call inside the functions has hardly any overhead
+    	object <- na.omit(object, drop.bursts=FALSE) # Remove the NAs already, then the call inside the functions has hardly any overhead
     	djl <- djl(object)
     	dist <- displacement.distance(object)
     	dir <- displacement.direction(object, units.direction)
@@ -260,16 +260,24 @@ summary.bbtraj <- function(object, ..., units.direction="radian") {
 }
 
 "djl" <- function(tr) {
-	res <- sapply(na.omit(tr), function(burst) {
-		sum(burst$dist, na.rm=T)
+	res <- sapply(na.omit(tr, drop.bursts=FALSE), function(burst) {
+		if (nrow(burst) > 0) {
+			sum(burst$dist, na.rm=T)
+		} else {
+			NA
+		}
 	})
 	names(res) <- names(tr)
 	res
 }
 
 "displacement.distance" <- function(tr) {
-	res <- sapply(na.omit(tr), function(burst) {
-		sqrt(burst$R2n[nrow(burst)])
+	res <- sapply(na.omit(tr, drop.bursts=FALSE), function(burst) {
+		if (nrow(burst) > 0) {
+			sqrt(burst$R2n[nrow(burst)])
+		} else {
+			NA
+		}
 	})
 	names(res) <- names(tr)
 	res
@@ -277,8 +285,12 @@ summary.bbtraj <- function(object, ..., units.direction="radian") {
 
 "displacement.direction" <- function(tr, units=c("radian","degree","compass")) {
 	units <- match.arg(units)
-	res <- sapply(na.omit(tr), function(burst) {
-		atan2(burst$y[nrow(burst)] - burst$y[1], burst$x[nrow(burst)] - burst$x[1])
+	res <- sapply(na.omit(tr, drop.bursts=FALSE), function(burst) {
+		if (nrow(burst) > 0) {
+			atan2(burst$y[nrow(burst)] - burst$y[1], burst$x[nrow(burst)] - burst$x[1])
+		} else {
+			NA
+		}
 	})
 	if (units == "degree" || units == "compass") {
 		res <- res * 180 / pi

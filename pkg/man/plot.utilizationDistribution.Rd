@@ -9,7 +9,7 @@ Plots the given utilization distribution, either by applying a colourmap to the 
 }
 \usage{
 \method{plot}{utilizationDistribution}(x, col = hcl(1:length(x) * 360/length(x), 50, 70),
-    xlim = NULL, ylim = NULL, add = FALSE, ...)
+    xlim = NULL, ylim = NULL, add = FALSE, plot.range=sapply(x, range), ...)
 \method{contour}{utilizationDistribution}(x, levels = 0.99, col = hcl(1:length(x) * 360/length(x), l=35), 
     xlim = NULL, ylim = NULL, labels = levels, add = FALSE, ...)
 }
@@ -20,6 +20,7 @@ Plots the given utilization distribution, either by applying a colourmap to the 
   \item{xlim}{The minimum and maximum x coordinate to plot.}
   \item{ylim}{The minimum and maximum y coordinate to plot.}
   \item{add}{Logical specifying if plot should be added to an already existing plot; defaults to FALSE.}
+  \item{plot.range}{The range on which the colour map is specified. Either two numbers or a matrix with two rows and one column per ID.}
   \item{levels}{The level(s) at which to draw contours.}
   \item{labels}{The labels to print with the contours. Use \code{drawlabels=FALSE} to hide them altogether.}
   \item{\dots}{Other \link{graphical parameters}, e.g. from \code{\link{plot.default}} or \code{\link{contour.default}}.}

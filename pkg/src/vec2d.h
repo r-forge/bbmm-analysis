@@ -31,7 +31,7 @@ public:
 		return *this;
 	}
 	
-	Vec2D<T> &operator*(T s) {
+	Vec2D<T> operator*(T s) const {
 		return Vec2D<T>(s*x, s*y);
 	}
 	

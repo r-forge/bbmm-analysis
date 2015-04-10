@@ -26,7 +26,7 @@ as.bbtraj(xys, date, id, burst = id, typeII = TRUE,
           infolocs = data.frame(pkey = paste(id, date, sep=".")),
           make.regular=FALSE)
 diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
-\method{na.omit}{bbtraj}(object, slsp=c("remove", "missing"), ...)
+\method{na.omit}{bbtraj}(object, slsp=c("remove", "missing"), drop.bursts=TRUE, ...)
 \method{split}{bbtraj}(x, f=as.factor(sapply(x, function(b) { attr(b, "id") })), drop = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -53,6 +53,7 @@ diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
   \item{byburst}{A logical indicating whether a different diffusion coefficient should be estimated for each burst.}
   \item{nsteps}{The number of different values for the diffusion coefficient to test. The range in which the value can be is determined automatically.}
   \item{object}{The trajectory from which to filter missing values.}
+  \item{drop.bursts}{Whether bursts that become empty should be removed.}
   \item{...}{Further arguments that might be required by specialized methods.}
   \item{x}{The trajectory to split.}
   \item{f}{A factor providing the destination group for each burst.}

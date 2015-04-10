@@ -67,7 +67,14 @@
 				result[[attr(data1, 'id'), attr(data2, 'id')]], intervals)
 	}
 
-	intervals <- lapply(result, function(t) { as.POSIXct(t, origin="1970-01-1")} )
+	intervals <- lapply(result, function(t) {
+		# A very lame hack, can we improve this somehow?
+		if (!is.null(attr(tr[[1]]$date,'tzone'))) {
+			as.POSIXct(t, origin="1970-01-01", tz=attr(tr[[1]]$date,'tzone'))
+		} else {
+			as.POSIXct(t, origin="1970-01-01")
+		}
+	})
 	attributes(intervals) <- attributes(result)
 
 	# Make the result matrix symmetric
