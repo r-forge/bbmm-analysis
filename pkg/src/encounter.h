@@ -38,6 +38,7 @@ void encounterLinear(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,
 		double *timestepSize);
+
 void encounterLinearIntervals(double *result, double *threshold,
 		int *nloc1, BBMM_measurement<double> *data1,
 		int *nloc2, BBMM_measurement<double> *data2,

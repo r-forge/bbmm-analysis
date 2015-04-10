@@ -61,8 +61,8 @@
 			resultSize <- resultSize+1
 			result[resultSize,1:4] <- c(attr(b, "id"), attr(burst, "id"), attr(b, "burst"), attr(burst, "burst"))
 			result[resultSize,model] <- sapply(model, function(m) {
-						.burstEncounterDuration(burst, b, threshold, timestepSize, m) 
-					})
+				.burstEncounterDuration(burst, b, threshold, timestepSize, m) 
+			})
 		}
 		
 		activeBursts <- c(activeBursts, list(burst))
@@ -96,10 +96,10 @@
 	b2 <- b2[!is.na(b2$loc.var),]
 	data2 <- c(t(b2)) # flatten into row-major vector
 
-	cResult <- .C(implementations[model],
+	cResult <- .C("encounterLinearIntervals",
 			double(1), as.double(dist),
 			as.integer(nrow(b1)), as.double(data1),
 			as.integer(nrow(b2)), as.double(data2),
-			as.double(timestepSize), PACKAGE="movementAnalysis")
+			as.double(timestepSize), double(2*(nrow(b1) + nrow(b2))), PACKAGE="movementAnalysis")
 	cResult[[1]] # The result is collected in the first C argument
 }

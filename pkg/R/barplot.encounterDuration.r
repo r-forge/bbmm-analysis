@@ -10,12 +10,13 @@ barplot.encounterDuration <- function(ed, col=NULL, units="auto", ...) {
 		# The first 4 columns do not contain values for models
 		models <- colnames(ed)[5:length(colnames(ed))]
 		
-		if (!any(is.na(as.numeric(rownames(ed))))) {
+		if (!any(is.na(suppressWarnings(as.numeric(rownames(ed)))))) {
 			# All row names are numbers; override the row names using the burst names
 			rownames(ed) <- paste(ed$burst1, ed$burst2, sep=" - ")
 		}
-		
+
 		plotMatrix <- t(sapply(ed[,models], function(d) { as.numeric(d, units=units) }))
+		colnames(plotMatrix) <- rownames(ed)
 	} else {
 		# duration by id, we need to convert to a matrix suitable for plotting
 		d <- dim(ed)
@@ -39,7 +40,6 @@ barplot.encounterDuration <- function(ed, col=NULL, units="auto", ...) {
 		}
 		colnames(plotMatrix) <- c
 	}
-	print(plotMatrix)
 	
 	barplot(plotMatrix, beside=TRUE, legend=rownames(plotMatrix), col=col, ...)
 }

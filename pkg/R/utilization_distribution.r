@@ -1,5 +1,7 @@
 "utilizationDistribution" <- function(tr, grid=NULL, timestepSize=60, xc=NULL, yc=NULL,
 		grid.dim=100, grid.pad=0.2) {
+	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
+		
 	if (inherits(grid,"asc")) {
 		# extract the grid lines from the provided grid
 		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
@@ -13,8 +15,6 @@
 		xc <- g$x
 		yc <- g$y
 	}
-	
-	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
 	
 	timeSteps <- .UDtimesteps(tr, timestepSize)
 	
@@ -52,6 +52,8 @@
 
 "encounterDistribution" <- function(tr, threshold, grid=NULL, timestepSize=60, xc=NULL, yc=NULL,
 		grid.dim=100, grid.pad=0.2) {
+	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
+	
 	if (inherits(grid,"asc")) {
 		# extract the grid lines from the provided grid
 		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
@@ -65,8 +67,6 @@
 		xc <- g$x
 		yc <- g$y
 	}	
-	
-	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
 	
 	useFields <- c("x","y","diff.coeff","loc.var","t")
 	
@@ -150,7 +150,7 @@
 	yr <- range(unlist(sapply(tr, function(b) { b$y })))
 	ypad <- padding * (yr[2]-yr[1])
 	yr <- c(yr[1]-ypad, yr[2]+ypad)
-		
+
 	cellSize <- min(xr[2] - xr[1], yr[2]-yr[1]) / grid.dim
 	
 	print(paste("Using default grid: bounding box for trajectory extended by", padding, "on each side."))

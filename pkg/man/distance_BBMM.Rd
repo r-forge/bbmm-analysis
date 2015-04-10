@@ -1,9 +1,9 @@
-\name{distance}
+\name{distance (BBMM)}
 \alias{ddistance}
 \alias{pdistance}
 \alias{qdistance}
 \title{
-Compute distance statistics
+Compute distance statistics using the BBMM
 }
 \description{
 Density, distribution function, quantile function for the distances between
@@ -25,7 +25,7 @@ qdistance(p, tr, time)
 }
 \value{
 \code{ddistance} computes the density, \code{pdistance} the distribution function and
-\code{qnorm} evaluates the quantile function for the requested parameters.
+\code{qdistance} evaluates the quantile function for the requested parameters.
 
 The functions return the requested values for each value of the first parameter
 (\code{d} or \code{p}) and for each of the requested times. The value is computed
