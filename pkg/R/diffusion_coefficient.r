@@ -17,6 +17,8 @@ setMethod(f = "diffusion<-",
 		# with groupBy != NULL, expand the result
 		diffusion <- diffusion[as.character(attr(value, 'grouping'))]
 		names(diffusion) <- names(attr(value, 'grouping'))
+	} else if (is.null(names(diffusion))) {
+		names(diffusion) <- levels(object@trackId)
 	}
 	
 	object@diffusion <- diffusion
@@ -49,7 +51,7 @@ setMethod(f="diffusion.convert", signature=c(dc.obj="matrix"),
 		sapply(ts, function(timestamp) {
 			i <- which(dc.obj[,1] > timestamp) - 1
 
-			if (length(i) == 0 || i[1] == 0) { return (1e-50) } # Clip to given range  ## TODO: temporary fix
+			if (length(i) == 0 || i[1] == 0) { return (0) } # Clip to given range
 			#TODO: placeholder solution, fix for real
 			dc.obj[i[1],2]
 		})
@@ -62,7 +64,6 @@ setMethod(f="diffusion.convert", signature=c(dc.obj="dBMvariance"),
 	## brownian.motion.variance.dyn uses minutes by default, how to fix this?
 	dc <- dc.obj@means / 60
 	dc[is.na(dc)] <- 0
-	dc[dc == 0] <- 1e-50 ## TODO: temporary fix
 	diffusion.convert(cbind(dc.obj@timestamps, dc))
 })
 
@@ -76,11 +77,11 @@ setMethod(f = "diffusionCoefficient",
 
 setMethod(f = "diffusionCoefficient",
 	signature = c(tr="MoveBBStack"),
-	definition = function (tr, groupBy=NULL, nsteps=1000, method=c("horne","new","dyn")) {
+	definition = function (tr, groupBy=NULL, nsteps=1000, method=c("horne","new")) {
 		.diffusionCoefficient(split(tr), groupBy, nsteps, method)
 })
 
-".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new","dyn")) {
+".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new")) {
 	method <- match.arg(method)
 	burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
 	switch(method,

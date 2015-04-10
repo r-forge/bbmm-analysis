@@ -7,7 +7,8 @@ setMethod(f = "moveBBStack",
 		
 		# Let the parent implementation deal with most work, then add the custom fields
 		ms <- moveStack(lapply(x, as, "Move"))
-		var <- unlist(sapply(x, slot, "variance"))
+		var <- c(unlist(sapply(x, slot, "variance")))
+		
 		diff <- unlist(lapply(lapply(x, slot, "diffusion"), unname))
 		
 		new("MoveBBStack",

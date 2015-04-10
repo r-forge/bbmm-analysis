@@ -1,5 +1,6 @@
 #include <R.h>
 #include <Rinternals.h>
+#include <cmath>
 #include "util.h"
 
 SEXP initIntegrate(SEXP diff) {
@@ -25,6 +26,8 @@ double integrate(SEXP call, double l, double h) {
 	// Set the limits of integration in the call
 	REAL(CADDR (call))[0] = l;
 	REAL(CADDDR(call))[0] = h;
+	
+	if (h - l <= 1e-10 * fmax(abs(l), abs(h))) { return 0.0; /* essentially empty interval */ }
 	
 	// Call the R function
 	SEXP iVal = eval(call, R_GlobalEnv);

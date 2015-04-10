@@ -67,13 +67,9 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 			iloc++;
 		}
 		
-		double alpha;
-		if (intDiff[iloc] <= 0.0) {
-			// Diff. coeff. is identically zero over link, alpha time-based
-			alpha = (t-ts[iloc]) / (ts[iloc+1]-ts[iloc]);
-		} else {
-			alpha = integrate(dInt, ts[iloc], t) / intDiff[iloc];
-		}
+		double alpha = (intDiff[iloc] > 0 ? 
+				  integrate(dInt, ts[iloc], t) / intDiff[iloc]
+				: (t-ts[iloc]) / (ts[iloc+1]-ts[iloc]));
 		Vec2D<double> pMu = (1-alpha) * dMu[iloc] + alpha * dMu[iloc+1];
 		double pVar = (1-alpha)*(1-alpha)*var[iloc] + alpha*alpha*var[iloc+1]
 				+ alpha*(1-alpha)*intDiff[iloc];
@@ -120,7 +116,9 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 					}
 					
 					if (sAlpha != sAlpha) { // sAlpha is NaN
-						sAlpha = integrate(dInt, ts[i], tStart) / intDiff[i];
+						sAlpha = (intDiff[i] > 0 ? 
+								  integrate(dInt, ts[i], tStart) / intDiff[i]
+								: (tStart-ts[i]) / (ts[i+1]-ts[i]));
 					}
 				
 					sMu  = (1-sAlpha) * dMu[i] + sAlpha * dMu[i+1];
@@ -129,9 +127,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 							+ (1-sAlpha) * sAlpha * intDiff[i];
 				} else {
 					if (sAlpha != sAlpha) { // sAlpha is NaN
-						sAlpha = integrate(dInt, t, ts[iloc+1]) / intDiff[iloc];
+						sAlpha = (intDiff[iloc] > 0 ? 
+								  integrate(dInt, t, ts[iloc+1]) / intDiff[iloc]
+								: (ts[iloc+1]-t) / (ts[iloc+1]-ts[iloc]));
 					}
-					
 					// See section 3.1.1 of MSc thesis for derivation of these quantities
 					Vec2D<double> muI = dMu[iloc];
 					double varI = var[iloc];
@@ -147,8 +146,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 					
 					if (iloc >= 1 && tStart < ts[iloc]) {
 						if (sBeta != sBeta) { // sBeta is NaN
-							sBeta  = integrate(dInt, tStart, ts[iloc])
-									/ intDiff[iloc-1];
+//							sBeta  = integrate(dInt, tStart, ts[iloc]) / intDiff[iloc-1];
+							sBeta = (intDiff[iloc-1] > 0 ? 
+								  integrate(dInt, tStart, ts[iloc]) / intDiff[iloc-1]
+								: (ts[iloc]-tStart) / (ts[iloc]-ts[iloc-1]));
 						}
 					
 						// the start of the time interval is in the previous bridge
@@ -161,7 +162,9 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 						// *dts is a negative number; negate the sign of the denominator
 						if (sBeta != sBeta) { // sBeta is NaN
 							sBetaD = integrate(dInt, ts[iloc], t);
-							sBeta = integrate(dInt, tStart, t) / sBetaD;
+							sBeta = (sBetaD > 0 ? 
+								  integrate(dInt, tStart, t) / sBetaD
+								: (t-tStart) / (t-ts[iloc]));
 						}
 					
 						sMu = (1-sBeta) * pos + sBeta * muI;
@@ -183,7 +186,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 						}
 						
 						if (fAlpha != fAlpha) { // fAlpha is NaN
-							fAlpha = integrate(dInt, ts[i], tFinish) / intDiff[i];
+//							fAlpha = integrate(dInt, ts[i], tFinish) / intDiff[i];
+							fAlpha = (intDiff[i] > 0 ? 
+								  integrate(dInt, tFinish, ts[i]) / intDiff[i]
+								: (ts[i]-tFinish) / (ts[i+1]-ts[i]));
 						}
 					
 						fMu  = (1-fAlpha) * dMu[i] + fAlpha * dMu[i+1];
@@ -192,7 +198,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 								+ (1-fAlpha) * fAlpha * intDiff[i];
 				} else {
 					if (fAlpha != fAlpha) { // fAlpha is NaN
-						fAlpha = integrate(dInt, ts[iloc], t) / intDiff[iloc];
+//						fAlpha = integrate(dInt, ts[iloc], t) / intDiff[iloc];
+						fAlpha = (intDiff[iloc] > 0 ? 
+								  integrate(dInt, ts[iloc], t) / intDiff[iloc]
+								: (t-ts[iloc]) / (ts[iloc+1]-ts[iloc]));
 					}
 					
 					// See section 3.1.1 of MSc thesis for derivation of these quantities
@@ -210,7 +219,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 					
 					if (iloc < nloc-2 && tFinish > ts[iloc+1]) {
 						if (fBeta != fBeta) { // fBeta is NaN
-							fBeta  = integrate(dInt, ts[iloc+1], tFinish) / intDiff[iloc+1];
+//							fBeta  = integrate(dInt, ts[iloc+1], tFinish) / intDiff[iloc+1];
+							fBeta = (intDiff[iloc+1] > 0 ? 
+								  integrate(dInt, ts[iloc+1], tFinish) / intDiff[iloc+1]
+								: (tFinish-ts[iloc+1]) / (ts[iloc+2]-ts[iloc+1]));
 						}
 					
 						// the end of the time interval is in the next bridge
@@ -221,7 +233,10 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 						// The end of the time interval is in the same bridge as t
 						if (fBeta != fBeta) { // fBeta is NaN
 							fBetaD = integrate(dInt, t, ts[iloc+1]);
-							fBeta  = integrate(dInt, t, tFinish) / fBetaD;
+//							fBeta  = integrate(dInt, t, tFinish) / fBetaD;
+							fBeta = (fBetaD > 0 ? 
+								  integrate(dInt, t, tFinish) / fBetaD
+								: (tFinish-t) / (ts[iloc+1]-t));
 						}
 					
 						fMu = (1-fBeta) * pos + fBeta * muI;
