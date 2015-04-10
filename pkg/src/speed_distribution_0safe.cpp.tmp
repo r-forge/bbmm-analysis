@@ -67,13 +67,7 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 			iloc++;
 		}
 		
-		double alpha;
-		if (intDiff[iloc] <= 0.0) {
-			// Diff. coeff. is identically zero over link, alpha time-based
-			alpha = (t-ts[iloc]) / (ts[iloc+1]-ts[iloc]);
-		} else {
-			alpha = integrate(dInt, ts[iloc], t) / intDiff[iloc];
-		}
+		double alpha = integrate(dInt, ts[iloc], t) / intDiff[iloc];
 		Vec2D<double> pMu = (1-alpha) * dMu[iloc] + alpha * dMu[iloc+1];
 		double pVar = (1-alpha)*(1-alpha)*var[iloc] + alpha*alpha*var[iloc+1]
 				+ alpha*(1-alpha)*intDiff[iloc];
@@ -131,7 +125,6 @@ SEXP speedDistribution(SEXP burst, SEXP rasterCoords,
 					if (sAlpha != sAlpha) { // sAlpha is NaN
 						sAlpha = integrate(dInt, t, ts[iloc+1]) / intDiff[iloc];
 					}
-					
 					// See section 3.1.1 of MSc thesis for derivation of these quantities
 					Vec2D<double> muI = dMu[iloc];
 					double varI = var[iloc];

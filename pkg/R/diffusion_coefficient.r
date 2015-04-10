@@ -7,16 +7,11 @@ setMethod(f = "diffusion",
 
 setGeneric("diffusion<-", function(object, value) standardGeneric("diffusion<-"))
 setMethod(f = "diffusion<-",
-	signature = c(object=".BBInfo"),
-	definition = function (object, value) {
-	
-	if (class(value) == "numeric") {
-		# Turn the diffusion coefficients into (constant) functions of time
-		diffusion <- sapply(value, function(d) { dc.val <- d; function(t) { rep(dc.val, length(t)) } })
-	} else {
-		diffusion <- value
-	}
-		
+		signature = c(object=".BBInfo"),
+		definition = function (object, value) {
+	## Convert the given values to the proper format
+	diffusion <- sapply(value, diffusion.convert)
+
 	if (!is.null(attr(value, 'grouping'))) {
 		# This is the result of a call to diffusionCoefficient
 		# with groupBy != NULL, expand the result
@@ -26,6 +21,49 @@ setMethod(f = "diffusion<-",
 	
 	object@diffusion <- diffusion
 	object
+})
+
+setGeneric("diffusion.convert", function(dc.obj) standardGeneric("diffusion.convert"))
+
+setMethod(f="diffusion.convert", signature=c(dc.obj="numeric"),
+		definition = function(dc.obj) {
+	# Turn the diffusion coefficients into (constant) functions of time
+	sapply(dc.obj, function(d) { 
+			dc.val <- d
+			function(ts) { rep(dc.val, length(ts)) } 
+	})
+})
+
+setMethod(f="diffusion.convert", signature=c(dc.obj="function"),
+		definition = function(dc.obj) {
+	dc.obj
+})
+
+setMethod(f="diffusion.convert", signature=c(dc.obj="matrix"),
+		definition = function(dc.obj) {
+	## Matrix should have two columns: time and diffusion coefficient
+	## Each row specifies the diffusion coefficient from the given time
+	## up to the timestamp in the next row
+	function(ts) {
+		## For each requested time, find the link in which the timestamp belongs
+		sapply(ts, function(timestamp) {
+			i <- which(dc.obj[,1] > timestamp) - 1
+
+			if (length(i) == 0 || i[1] == 0) { return (1e-50) } # Clip to given range  ## TODO: temporary fix
+			#TODO: placeholder solution, fix for real
+			dc.obj[i[1],2]
+		})
+	}
+})
+
+setMethod(f="diffusion.convert", signature=c(dc.obj="dBMvariance"),
+		definition = function(dc.obj) {
+	## Convert to matrix and redirect
+	## brownian.motion.variance.dyn uses minutes by default, how to fix this?
+	dc <- dc.obj@means / 60
+	dc[is.na(dc)] <- 0
+	dc[dc == 0] <- 1e-50 ## TODO: temporary fix
+	diffusion.convert(cbind(dc.obj@timestamps, dc))
 })
 
 setGeneric("diffusionCoefficient", function(tr, groupBy=NULL, nsteps=1000,
@@ -38,11 +76,11 @@ setMethod(f = "diffusionCoefficient",
 
 setMethod(f = "diffusionCoefficient",
 	signature = c(tr="MoveBBStack"),
-	definition = function (tr, groupBy=NULL, nsteps=1000, method=c("horne","new")) {
+	definition = function (tr, groupBy=NULL, nsteps=1000, method=c("horne","new","dyn")) {
 		.diffusionCoefficient(split(tr), groupBy, nsteps, method)
 })
 
-".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new")) {
+".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new","dyn")) {
 	method <- match.arg(method)
 	burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
 	switch(method,

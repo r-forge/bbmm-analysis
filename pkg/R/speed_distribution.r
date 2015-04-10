@@ -86,7 +86,7 @@ setMethod(f = "speedDistribution",
 				diff=tr@diffusion
 			),
 			list(X=xc, Y=yc),
-			as.double(timestepSize), as.double(c(0.0, time.scale))
+			as.double(timestepSize), as.double(c(-time.scale, 0.0))
 	)
 	# Sum the results (sum of speeds and total weights) and return
 	mapply("+", res, cResult, SIMPLIFY=FALSE)

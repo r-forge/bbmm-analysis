@@ -4,7 +4,11 @@ setMethod(f = "position",
 	signature = c(time="POSIXct"),
 	definition = function(object, time) {
 	p <- position(object, as.double(time))
-	dimnames(p)[[3]] <- format(time, usetz=TRUE)
+	if (inherits(object, "MoveBBStack")) {
+		dimnames(p)[[3]] <- format(time, usetz=TRUE)
+	} else {
+		rownames(p) <- format(time, usetz=TRUE)
+	}
 	p
 })
 
@@ -26,6 +30,8 @@ setMethod(f = "position",
 					}
 					diff0T <- diff0T$value
 					diff0t <- diff0t$value
+					print(diff0T)
+					print(diff0t)
 					alpha <- diff0t / diff0T
 					res[c("x","y")] <- (1-alpha)*object@coords[j-1,] + alpha*object@coords[j,]
 					res["var"] <- (
@@ -44,7 +50,7 @@ setMethod(f = "position",
 })
 
 setMethod(f = "position",
-	signature = c(object="MoveBBStack"),
+	signature = c(object="MoveBBStack", time="numeric"),
 	definition = function (object, time, groupBy=NULL) {
 		.mBBStack_statistic(object, time, groupBy, name="position")
 })
