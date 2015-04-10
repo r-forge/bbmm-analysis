@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "encounter.h"
+#include "util.h"
 #include <Rinternals.h>
 #include <Rdefines.h>
 
@@ -16,37 +17,15 @@
 #define Rv(i) (res[4*(i) + 2])
 #define Rw(i) (res[4*(i) + 3])
 
-// Call the "integrate" R function with the set limits.
-// dInt, dIL and dIH must be prepared correctly.
-#define integrate(l, h) (dIL[0] = (l), dIH[0] = (h), getIntegral(eval(dInt, R_GlobalEnv)))
-
-double getIntegral(SEXP i) {
-	// TODO: check whether the message says "OK"
-	
-	
-	return REAL(VECTOR_ELT(i, 0))[0];
-}
-
 extern "C" {
 
 SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps) {
 	SEXP result, dims,
 			dInt, dIntL, dIntH; // call to integrate, pointers to lower and uppper bounds
 	diff = VECTOR_ELT(diff, 0);
-	if (!isFunction(diff)) {
-		error("The diffusion coefficient must be a function");
-	}
-	// Construct a call to integrate(diff, dIntL, dIntH); abuse result as a tmp SEXP object
-	PROTECT(dIntL = allocVector(REALSXP, 1));
-	PROTECT(dIntH = allocVector(REALSXP, 1));
-	
-	PROTECT(result = dInt = allocList(4));
-	SET_TYPEOF(dInt, LANGSXP);
-	SETCAR(dInt, install("integrate")); result = CDR(dInt);
-	SETCAR(result, diff); result = CDR(result);
-	SETCAR(result, dIntL); result = CDR(result);
-	SETCAR(result, dIntH);
 
+	PROTECT(dInt = initIntegrate(diff));
+	
 	// Extract the number of relocations in the input data
 	PROTECT(dims = GET_DIM(bData));
 	int nLoc = INTEGER(dims)[1];
@@ -59,11 +38,9 @@ SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps) {
 	double *ts = REAL(timeSteps);
 	double *data = REAL(bData);
 	double *res = REAL(result);
-	double *dIL = REAL(dIntL);
-	double *dIH = REAL(dIntH);
-
+	
 	off_t i = 1;
-	double diff0T = integrate(Dt(i-1), Dt(i));
+	double diff0T = integrate(dInt, Dt(i-1), Dt(i));
 	for (off_t k = 0; k < length(timeSteps); k++) {
 		double t = ts[k];
 		
@@ -75,10 +52,9 @@ SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps) {
 		while (t > Dt(i) && i < (nLoc-1)) {
 			i++;
 			// Set the limits of integration, then compute the integral
-			diff0T = integrate(Dt(i-1), Dt(i));
+			diff0T = integrate(dInt, Dt(i-1), Dt(i));
 		}
-		double diff0t = integrate(Dt(i-1), t);
-		double alpha = diff0t / diff0T;
+		double alpha = integrate(dInt, Dt(i-1), t) / diff0T;
 		
 		if (t < Dt(0)) {
 			Rx(k) = Dx(0);
@@ -110,7 +86,7 @@ SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps) {
 
 	}
 	
-	UNPROTECT(4); // dInt, dIntL, dIntH, result
+	UNPROTECT(2); // dInt, result
 	return result;
 } // UDTimesteps
 

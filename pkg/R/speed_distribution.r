@@ -1,16 +1,8 @@
 "speedDistribution" <- function(tr, raster=NULL, timestepSize=60, time.scale=timestepSize,
-		grid.dim=100, grid.pad=0.2) {
-	tr <- na.omit(tr) # Filter out missing measurements, these break the algorithm
-	
-	# Convert date representations to numeric values
-	for (i in 1:length(tr)) {
-		burst <- tr[[i]]
-		burst$date <- as.double(burst$date)
-		tr[[i]] <- burst
-	}
-		
+		grid.dim=100, grid.pad=0.2, groupBy=NULL) {
+			
 	if (is.null(raster)) {
-		raster <- .defaultRaster(tr, grid.dim, grid.pad)
+		raster <- .defaultRaster(extent(tr), grid.dim, grid.pad)
 	}
 		
 	if (inherits(raster,"RasterLayer")) {
@@ -22,41 +14,53 @@
 		stop("raster must be an instance of 'RasterLayer' if set")
 	}
 	
-	if (is.null(xc) || is.null(yc)) {
-		g <- .defaultGrid(tr, grid.dim, grid.pad)
-		xc <- g$x
-		yc <- g$y
-	}
-	
 	if (time.scale <= 0) {
 		stop("time.scale must be positive")
 	}
 	
-	result <- lapply(split(tr), function(tr.id) {
-		r <- matrix(0, length(xc), length(yc))
-		cResult <- list(r, r)
-		for (burst in tr.id) {
-			burst <- burst[,c("x","y","diff.coeff","loc.var","date")]
-			data <- c(t(burst)) # flatten into vector in row-major order
+	# Split the trajectory into bursts and find out how they should be grouped
+	trs <- split(tr)
+	resultNames <- names(trs)
+	burstNames <- resultNames
+	if (!is.null(groupBy)) {
+		resultNames <- unique(tr@idData[,groupBy])
+		burstNames <- as.character(sapply(names(trs), function (n) { tr@idData[n, groupBy] }))
+	}
 
+	emptyResult <- matrix(0, length(xc), length(yc))
+	result <- lapply(resultNames, function(id) {
+		res <- list(emptyResult, emptyResult)
+		for (burst in trs[burstNames==id]) {
 			# First, compute average speeds over intervals starting at the fixed points
-			cResult <- .C("speedDistribution", 
-					as.double(cResult[[1]]), as.double(cResult[[2]]),
-					as.double(data), as.integer(nrow(burst)),
-					as.double(xc), as.double(yc), as.integer(length(xc)), as.integer(length(yc)),
-					as.double(timestepSize), as.double(0), as.double(time.scale))
+			cResult <- .Call("speedDistribution",
+					list(coords=t(burst@coords),
+						ts=as.double(burst@timestamps),
+						var=burst@variance,
+						diff=burst@diffusion
+					),
+					list(X=xc, Y=yc),
+					as.double(timestepSize), c(0.0, time.scale)
+			)
+			res <- mapply("+", res, cResult, SIMPLIFY=FALSE)
+			
 			# Then, compute average speeds over intervals ending at the fixed points
-			cResult <- .C("speedDistribution", 
-					as.double(cResult[[1]]), as.double(cResult[[2]]),
-					as.double(data), as.integer(nrow(burst)),
-					as.double(xc), as.double(yc), as.integer(length(xc)), as.integer(length(yc)),
-					as.double(timestepSize), as.double(-time.scale), as.double(0))
+			cResult <- .Call("speedDistribution",
+					list(coords=t(burst@coords),
+						ts=as.double(burst@timestamps),
+						var=burst@variance,
+						diff=burst@diffusion
+					),
+					list(X=xc, Y=yc),
+					as.double(timestepSize), c(0.0, time.scale)
+			)
+			res <- mapply("+", res, cResult, SIMPLIFY=FALSE)
 		}
-		values <- matrix(cResult[[1]] / cResult[[2]], ncol(raster))
+		values <- matrix(res[[1]] / res[[2]], ncol(raster))
 		r <- raster
 		values(r) <- c(values[,nrow(raster):1])
 		return(r)
 	})
+	names(result) <- resultNames
 	stack(result)
 }
 

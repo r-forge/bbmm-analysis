@@ -25,26 +25,28 @@ setMethod(f="moveBB",
 		var <- rep(var, nrow(moveObj@coords))
 	}
 
-	# TODO: add a real diff.coeff computation here
-	# Create a temporary MoveBBStack object to compute the diffusion coefficient on
-	tmpDiff <- sapply(rep(NA, nrow(moveObj@idData)), function(d) {
-			function(t){ rep(NA, length(t)) } 
-	})
-	names(tmpDiff) <- rownames(moveObj@idData)
-	
+	emptyDiff <- lapply(rownames(moveObj@idData), function(b) { NULL })
+	names(emptyDiff) <- rownames(moveObj@idData)
+
 	if (is(moveObj, "Move")) {
 		res <- new("MoveBB",
 				variance=var,
-				diffusion=tmpDiff,
+				diffusion=emptyDiff,
 				moveObj
 		)
 	} else {
 		res <- new ("MoveBBStack",
 				variance=var,
-				diffusion=tmpDiff,
+				diffusion=emptyDiff,
 				moveObj
 		)
 	}
+	
+	# Set the diffusion coefficient if the trajectory is projected
+	if (!isLonLat(res)) {
+		diffusion(res) <- diffusionCoefficient(res)
+	}
+	res
 }
 
 .IDs <- function(moveObj, groupBy=NULL) {

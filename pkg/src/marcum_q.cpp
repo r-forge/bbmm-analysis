@@ -1,4 +1,5 @@
-#include "encounter.h"
+#include <math.h>
+#include "util.h"
 #include "bessel.h"
 
 /**

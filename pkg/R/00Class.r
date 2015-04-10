@@ -11,7 +11,8 @@ setClass(Class = ".BBInfo",
 		if (any(is.na(object@variance) | object@variance < 0)) {
 			stop("Variance must be set and nonnegative")
 		}
-		if (any(sapply(object@diffusion, class) != "function")) {
+		if (any(sapply(object@diffusion, class) != "function"
+				& !sapply(object@diffusion, is.null))) {
 			stop("Diffusion coefficient mappings must be functions")
 		}
 	}
@@ -42,17 +43,3 @@ setClass(Class = "MoveBBStack", contains=c("MoveStack", ".BBInfo"),
 		}
 	}
 )
-
-#setClass(Class = "UD", contains = c("move:::.UD"), 
-#	 representation = representation(), 
-#	 prototype = prototype(), 
-#	 validity = function(object) {
-#		 return(TRUE)
-#	 })
-#	 
-#setClass(Class = "UDStack", contains = c("move:::.UDStack"), 
-#	 representation = representation(), 
-#	 prototype = prototype(), 
-#	 validity = function(object) {
-#		 return(TRUE)
-#	 })

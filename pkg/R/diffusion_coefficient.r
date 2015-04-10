@@ -1,13 +1,13 @@
 setGeneric("diffusion", function(object) standardGeneric("diffusion"))
 setMethod(f = "diffusion",
-	signature = c(object="MoveBBStack"),
+	signature = c(object=".BBInfo"),
 	definition = function (object) {
 		object@diffusion
 })
 
 setGeneric("diffusion<-", function(object, value) standardGeneric("diffusion<-"))
 setMethod(f = "diffusion<-",
-	signature = c(object="MoveBBStack"),
+	signature = c(object=".BBInfo"),
 	definition = function (object, value) {
 	
 	if (class(value) == "numeric") {
@@ -30,11 +30,20 @@ setMethod(f = "diffusion<-",
 
 setGeneric("diffusionCoefficient", function(tr, groupBy=NULL, nsteps = 1000) standardGeneric("diffusionCoefficient"))
 setMethod(f = "diffusionCoefficient",
+	signature = c(tr="MoveBB"),
+	definition = function (tr, nsteps = 1000) {
+		.diffusionCoefficient(list(tr), NULL, nsteps)
+})
+
+setMethod(f = "diffusionCoefficient",
 	signature = c(tr="MoveBBStack"),
 	definition = function (tr, groupBy=NULL, nsteps = 1000) {
-		trs <- split(tr)
+		.diffusionCoefficient(split(tr), groupBy, nsteps)
+})
 		
-		burstNames <- .IDs(tr, groupBy)
+		
+".diffusionCoefficient" <- function(trs, groupBy, nsteps) {
+		burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
 		resultNames <- unique(burstNames)
 		
 		inputData <- list()
@@ -101,7 +110,7 @@ setMethod(f = "diffusionCoefficient",
 			attr(result, 'grouping') <- burstNames
 		}
 		return(result)
-})
+}
 
 # New method for estimating diffusion coefficient, based on displacement over
 # each bridge.

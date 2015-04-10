@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "encounter.h"
+#include "util.h"
 
 extern "C" {
 

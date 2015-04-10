@@ -59,6 +59,7 @@
 	}
 	
 	UDs <- stack(UDs)
+	UDs@crs <- tr@proj4string
 	return(UDs)
 }
 

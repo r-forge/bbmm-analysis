@@ -21,17 +21,26 @@ setGeneric("dataSummary", function(object, ...){standardGeneric("dataSummary")})
 setMethod("dataSummary",
 		signature=".MoveTrackStack",
 		definition=function(object, ..., units.direction="radian") {
-			so <- split(object)
-			djl <- djl(so)
-			dist <- displacement.distance(so)
-			dir <- displacement.direction(so, units.direction)
-			
-			data.frame(object@idData,
-					nobs=sapply(so, nrow),
-					DJL=djl,
-					displ.dist=dist,
-					displ.dir=dir)
+			.dataSummary(split(object), units.direction, ...)
 })
+
+setMethod("dataSummary",
+		signature=".MoveTrackSingle",
+		definition=function(object, ..., units.direction="radian") {
+			.dataSummary(list(object), units.direction, ...)
+})
+
+".dataSummary" <- function (object, units.direction, ...) {
+		djl <- djl(object)
+		dist <- displacement.distance(object)
+		dir <- displacement.direction(object, units.direction)
+		
+		data.frame(do.call(rbind, lapply(object, slot, "idData")),
+				nobs=sapply(object, nrow),
+				DJL=djl,
+				displ.dist=dist,
+				displ.dir=dir)
+}
 
 "djl" <- function(tr) {
 	res <- sapply(tr, function(burst) {

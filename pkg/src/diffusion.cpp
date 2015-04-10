@@ -6,11 +6,11 @@
 #include <R.h>
 
 #include "encounter.h"
+#include "util.h"
 
-/* *********************************************************************
-   Maximisation of the likelihood for the Brownian bridge
-   
-   *********************************************************************/
+/**********************************************************************
+ * Maximisation of the likelihood for the Brownian bridge
+ *********************************************************************/
 
 template<class T>
 struct BBMM_dcBridge {

@@ -2,6 +2,7 @@
 #define __ENCOUNTER_H__
 
 #include <R.h>
+#include <Rinternals.h>
 #include "vec2d.h"
 
 template<class T>
@@ -31,14 +32,15 @@ struct LevyMM_timestep {
 
 extern "C" {
 
-//void UDTimesteps(BBMM_timestep<double> *result,
-//		int *nloc, BBMM_measurement<double> *data,
-//		int *nsteps, double *timeLimits);
+/**
+ * Compute the mean location and variance at every timestep for a call to getUD().
+ */
+SEXP UDTimesteps(SEXP bData, SEXP diff, SEXP timeSteps);
 
 /**
  * Compute a utilization distribution
  */
-void getUD(double *result, int *resultSize,
+void utilizationDistribution(double *result, int *resultSize,
 		int *nsteps,
 		// mean X coord, mean Y coord, variance and weight for each time step
 		double *tsX, double *tsY, double *tsVar, double *tsW,
@@ -83,33 +85,6 @@ void diffusion(double *xys, double *Tr,
 	 int *nloc, double *Lr, double *sigma, int *nsig);
 
 }; // extern "C"
-
-// d2 is the squared distance between mu and p in the next function
-inline double pdf_norm2d(double d2, double var)
-{
-	// straightforward implementation of the expression for the pdf of N(mu, sigma^2)
-    return exp(d2 / (-2.0 * var)) / (2 * PI * var);
-}
-
-inline double pdf_norm2d(Vec2D<double> p, Vec2D<double> mu, double var)
-{
-	// Call the squared-distance based function for the PDF
-    return pdf_norm2d((p-mu).norm2(), var);
-}
-
-inline double cdf_norm2d(Vec2D<double> p, double hCellSize, Vec2D<double> mu, double var)
-{
-	double s2V = sqrt(2 * var);
-	// P(X inside cell of size cellSize centered at p) =
-	// 	P(p.x - cs/2 <= X.x <= p.x + cs/2) P(p.y - cs/2 <= X.y <= p.y + cs/2)
-	return (erf((p.x + hCellSize - mu.x)/s2V) - erf((p.x - hCellSize - mu.x)/s2V))
-			* (erf((p.y + hCellSize - mu.y)/s2V) - erf((p.y - hCellSize - mu.y)/s2V));
-}
-
-double marcumQ(const double alpha, const double beta);
-inline double cdf_rice(double x, double nu, double sigma) {
-	return 1.0 - marcumQ(nu/sigma, x/sigma);
-}
   
 #endif // __ENCOUNTER_H__
 
