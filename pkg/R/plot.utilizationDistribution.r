@@ -1,5 +1,7 @@
-plot.utilizationDistribution <- function (ud, col=rainbow(length(ud)),
+plot.utilizationDistribution <- function (ud, col=hcl(1:length(ud) * 360/length(ud), 50, 70),
 		xlim=NULL, ylim=NULL, add=FALSE, ...) {
+	if (length(ud) == 0) { return(NULL) }
+		
 	if (inherits(ud[[1]], "asc")) {
 		coords <- sapply(ud, getXYcoords)
 		xc <- coords['x',1][[1]]
@@ -28,7 +30,8 @@ plot.utilizationDistribution <- function (ud, col=rainbow(length(ud)),
 	}
 	for (i in 1:length(ud)) {
 		u <- ud[[i]]
-		
-		image(xc, yc, unclass(u), col=col[[i]], add=T)
+		if (max(u) > 0) {
+			image(xc, yc, unclass(u), col=col[[i]], add=T)
+		}
 	}
 }

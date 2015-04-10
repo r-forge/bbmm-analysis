@@ -45,11 +45,12 @@ The result contains the following fields:
 \item{id1,id2}{The IDs of the bursts involved}
 \item{burst1,burst2}{The names of the bursts involved}
 \item{}{In addition there is one column for each model requested, named after
-	the model. These columns contain the encounter duration according to
-	that model.}
+	the model. These columns are of type \code{\link{difftime}}, with unit \code{secs}.
+	They contain the encounter duration according to that model.}
 
 If \code{byburst == TRUE}, the result is a 3 dimensional array, indexed by
-the two IDs and the movement model.
+the two IDs and the movement model. The entries in the array are again of class
+\code{\link{difftime}} with unit \code{secs}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

@@ -8,9 +8,9 @@ Plot or draw contours for utilization distributions.
 Plots the given utilization distribution, either by applying a colourmap to the values or by drawing contours where the value passes certain levels.
 }
 \usage{
-plot.utilizationDistribution(ud, col = rainbow(length(ud)),
+\method{plot}{utilizationDistribution}(ud, col = hcl(1:length(ud) * 360/length(ud), 50, 70),
     xlim = NULL, ylim = NULL, add = FALSE, ...)
-contour.utilizationDistribution(ud, levels = 0.99, col = rainbow(length(ud)), 
+\method{contour}{utilizationDistribution}(ud, levels = 0.99, col = col=hcl(1:length(ud) * 360/length(ud), l=35), 
     xlim = NULL, ylim = NULL, labels = levels, add = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.

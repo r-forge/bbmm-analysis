@@ -7,7 +7,8 @@ Spatial distribution of encounters
 Computes the expected duration of encounters at each location for every pair of IDs.
 }
 \usage{
-encounterDistribution(tr, threshold, grid=NULL, timestepSize = 60, xc=NULL, yc=NULL)
+encounterDistribution(tr, threshold, grid=NULL, timestepSize = 60,
+    xc=NULL, yc=NULL, grid.dim = 100, grid.pad = 0.2)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +18,10 @@ encounterDistribution(tr, threshold, grid=NULL, timestepSize = 60, xc=NULL, yc=N
   \item{timestepSize}{The difference between consecutive time steps, in seconds}
   \item{xc}{The x coordinates of the vertical grid lines}
   \item{yc}{The y coordinates of the horizontal grid lines}
+  \item{grid.dim}{If all of \code{grid}, \code{xc} and \code{yc} are omitted,
+  this specifies the dimension of the shortest axis of the grid used.}
+  \item{grid.pad}{If the grid is automatically generated, its range is the range
+  of the relocations extended \code{grid.pad} times the length of the range on each side.}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~

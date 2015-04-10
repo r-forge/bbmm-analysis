@@ -1,5 +1,5 @@
-"utilizationDistribution" <- function(tr, grid=NULL, timestepSize=60, xc=NULL, yc=NULL)
-{
+"utilizationDistribution" <- function(tr, grid=NULL, timestepSize=60, xc=NULL, yc=NULL,
+		grid.dim=100, grid.pad=0.2) {
 	if (inherits(grid,"asc")) {
 		# extract the grid lines from the provided grid
 		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
@@ -9,7 +9,9 @@
 	}
 	
 	if (is.null(xc) || is.null(yc)) {
-		stop("Either grid or both xc and yc must be set")
+		g <- .defaultGrid(tr, grid.dim, grid.pad)
+		xc <- g$x
+		yc <- g$y
 	}
 	
 	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
@@ -48,7 +50,8 @@
 	return(UDs)
 }
 
-"encounterDistribution" <- function(tr, threshold, grid=NULL, timestepSize=60, xc=NULL, yc=NULL) {
+"encounterDistribution" <- function(tr, threshold, grid=NULL, timestepSize=60, xc=NULL, yc=NULL,
+		grid.dim=100, grid.pad=0.2) {
 	if (inherits(grid,"asc")) {
 		# extract the grid lines from the provided grid
 		xc <- seq(from=attr(grid, "xll"), by=attr(grid, "cellsize"), length.out=attr(grid, "dim")[1])
@@ -58,7 +61,9 @@
 	}
 	
 	if (is.null(xc) || is.null(yc)) {
-		stop("Either grid or both xc and yc must be set")
+		g <- .defaultGrid(tr, grid.dim, grid.pad)
+		xc <- g$x
+		yc <- g$y
 	}	
 	
 	tr <- bbFilterNA(tr) # Filter out missing measurements, these break the algorithm
@@ -76,7 +81,7 @@
 	for (id1 in ids) {
 		# It makes no sense to compute encounters between a group and itself, so don't do that
 		for (id2 in ids[-which(ids==id1)]) {
-			# encounters can only be determined if we have an estimate for both IDs
+			# encounters can only be determined if we have a position estimate for both IDs
 			encounterTimes <- intersect(rownames(timeSteps[[id1]]), rownames(timeSteps[[id2]]))
 			
 			weight <- pmin(timeSteps[[id1]][encounterTimes,'weight'], timeSteps[[id2]][encounterTimes,'weight'])
@@ -115,7 +120,7 @@
 	result <- list()
 	
 	for (id in ids) {
-		bursts <- tr[id=id]
+		bursts <- tr[sapply(tr, nrow) >= 2][id=id]
 		result[[id]] <- do.call("rbind", lapply(bursts, function(burst) {
 				burst$t <- as.double(burst$date)
 				burst <- burst[!(is.na(burst$x) || is.na(burst$y) || is.na(burst$loc.var)),
@@ -137,3 +142,20 @@
 	return(result)
 }
 
+".defaultGrid" <- function(tr, grid.dim, padding) {
+	xr <- range(unlist(sapply(tr, function(b) { b$x })))
+	xpad <- padding * (xr[2]-xr[1])
+	xr <- c(xr[1]-xpad, xr[2]+xpad)
+	
+	yr <- range(unlist(sapply(tr, function(b) { b$y })))
+	ypad <- padding * (yr[2]-yr[1])
+	yr <- c(yr[1]-ypad, yr[2]+ypad)
+		
+	cellSize <- min(xr[2] - xr[1], yr[2]-yr[1]) / grid.dim
+	
+	print(paste("Using default grid: bounding box for trajectory extended by", padding, "on each side."))
+	return(list(
+		x=seq(xr[1], xr[2], by=cellSize),
+		y=seq(yr[1], yr[2], by=cellSize)
+	))
+}

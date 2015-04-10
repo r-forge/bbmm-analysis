@@ -13,7 +13,7 @@
 		encounterMatrix[id, id,] <- NA
 	}
 	
-	duration <- as.matrix(encounterDurationByBurst[,models])
+	duration <- sapply(encounterDurationByBurst[,models], as.numeric)
 	if (nrow(encounterDurationByBurst) > 0) {
 		for (i in 1:nrow(encounterDurationByBurst)) {
 			id1 <- encounterDurationByBurst$id1[i]
@@ -25,7 +25,8 @@
 	
 	# We only have the part above the diagonal now, make the matrix symmetric
 	encounterMatrix <- encounterMatrix + aperm(encounterMatrix, c(2,1,3))
-	class(encounterMatrix) <- "encounterDuration"
+	encounterMatrix <- as.difftime(encounterMatrix, units=attr(encounterDurationByBurst[[models[1]]], "units"))
+	class(encounterMatrix) <- c("encounterDuration", class(encounterMatrix))
 	encounterMatrix
 }
 
@@ -66,6 +67,9 @@
 		
 		activeBursts <- c(activeBursts, list(burst))
 	}
+
+	# Store the results in difftime format	
+	result[,model] <- lapply(result[,model], function(d) { as.difftime(d, units="secs") })
 	
 	if (byburst) {
 		result <- result[1:resultSize,] # return only the filled in rows

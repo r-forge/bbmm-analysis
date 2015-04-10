@@ -1,5 +1,5 @@
 "ddistance" <- function(d, tr, time) {
-	.distance_statistic(tr, time, d, lmomco::pdfrice, ifelse(distance==0, Inf, 0))
+	.distance_statistic(tr, time, d, lmomco::pdfrice, ifelse(d==0, Inf, 0))
 }
 
 "pdistance" <- function(d, tr, time) {

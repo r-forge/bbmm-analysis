@@ -27,7 +27,7 @@ void UDTimesteps(BBMM_timestep<double> *result,
 		}
 		
 		result[k].mu = ((1.0-alpha) * data[i-1].mu + alpha * data[i].mu);
-		result[k].var = (data[i].t-data[i-1].t) * alpha * (1.0-alpha) * data[i].vDiff // TODO: check whether V11 at i or i-1
+		result[k].var = (data[i].t-data[i-1].t) * alpha * (1.0-alpha) * data[i-1].vDiff
 				+ (1.0-alpha)*(1.0-alpha) * data[i-1].vMeas + alpha*alpha * data[i].vMeas;
 		if (k == 0) {
 			if (t < data[0].t) {
@@ -57,7 +57,6 @@ void utilizationDistribution(double *result, int *resultSize,
 		double *xc, double *yc, int *nrow, int *ncol) {
 
 	for (off_t x = 0; x < *ncol; x++) {
-		//Rprintf("\n%d ", x);
 		for (off_t y = 0; y < *nrow; y++) {
 			//Rprintf("(%d,%d)\n", x, y);
 			Vec2D<double> pos(xc[x], yc[y]);
@@ -65,13 +64,10 @@ void utilizationDistribution(double *result, int *resultSize,
 			*value = 0.0;
 			for (off_t k = 0; k < *nsteps; k++) {
 				*value += tsW[k] * pdf_norm2d(pos, Vec2D<double>(tsX[k], tsY[k]), tsVar[k]);
-				
-				//Rprintf("(%d, %d) %d/%d %10f %10f %10f %10f %10f %10f\n", x, y, k, *nsteps, *value, tsX[k], tsY[k], tsVar[k], tsW[k]);
 			}
 			
 			// TODO: is there a simple way to normalize the result?
 		}
-		//Rprintf("\n\n");
 	}
 }
 

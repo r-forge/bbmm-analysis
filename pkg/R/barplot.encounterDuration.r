@@ -1,6 +1,9 @@
-barplot.encounterDuration <- function(ed,
-		col=rainbow(ifelse(is.data.frame(ed), ncol(ed)-4, dim(ed)[3])),
-		...) {
+barplot.encounterDuration <- function(ed, col=NULL, units="auto", ...) {
+	if (is.null(col)) {
+		nColours <- ifelse(is.data.frame(ed), ncol(ed)-4, dim(ed)[3])
+		col <- hcl(1:nColours * 360/nColours)
+	}
+		
 	if (is.data.frame(ed)) {
 		# duration by burst
 		
@@ -12,7 +15,7 @@ barplot.encounterDuration <- function(ed,
 			rownames(ed) <- paste(ed$burst1, ed$burst2, sep=" - ")
 		}
 		
-		plotMatrix <- t(ed[,models])
+		plotMatrix <- t(sapply(ed[,models], function(d) { as.numeric(d, units=units) }))
 	} else {
 		# duration by id, we need to convert to a matrix suitable for plotting
 		d <- dim(ed)
@@ -31,11 +34,12 @@ barplot.encounterDuration <- function(ed,
 				
 				k <- k+1
 				c[k] <- paste(id1, id2, sep="-");
-				plotMatrix[,k] <- ed[id1, id2,]
+				plotMatrix[,k] <- as.numeric(ed[id1, id2,], units=units)
 			}
 		}
 		colnames(plotMatrix) <- c
 	}
+	print(plotMatrix)
 	
 	barplot(plotMatrix, beside=TRUE, legend=rownames(plotMatrix), col=col, ...)
 }

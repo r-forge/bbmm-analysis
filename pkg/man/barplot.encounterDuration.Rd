@@ -7,14 +7,13 @@ Draw a barplot representing the duration of encounters.
 Given the result from a call to \code{\link{encounterDuration}}, this function draws a barplot. The plot contains one group of bars for each pair of IDs or bursts in the data (depending on the type of data). Each group contains a bar for each model for which the encounter duration was computed.
 }
 \usage{
-barplot.encounterDuration(ed,
-    col = rainbow(ifelse(is.data.frame(ed), ncol(ed) - 4, dim(ed)[3])),
-    ...)
+\method{barplot}{encounterDuration}(ed, col = NULL, units="auto", ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{ed}{The object containing the duration of encounters.}
-  \item{col}{The colours to use in the plot.}
+  \item{col}{The colours to use in the plot. By default, takes colours with equally spaced hues in the \code{\link{hcl}} space.}
+  \item{units}{The unit used on the y axis of the plot. Must be a unit accepted by \code{\link{difftime}}.}
   \item{\dots}{Other \link{graphical parameters}, e.g. from \code{\link{barplot.default}}.}
 }
 \details{

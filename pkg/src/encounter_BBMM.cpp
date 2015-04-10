@@ -45,10 +45,10 @@ void encounterBBMM(double *result, double *threshold,
 			((1.0-alpha2) * data2[j-1].mu + alpha2 * data2[j].mu);
 			
 		double varDistance =
-			(data1[i].t - data1[i-1].t) * alpha1 * (1.0-alpha1) * data1[i].vDiff // TODO: check whether V11 at i or i-1
+			(data1[i].t - data1[i-1].t) * alpha1 * (1.0-alpha1) * data1[i-1].vDiff
 				 + (1.0-alpha1)*(1.0-alpha1) * data1[i-1].vMeas + alpha1*alpha1 * data1[i].vMeas
 			+
-			(data2[j].t - data2[j-1].t) * alpha2 * (1.0-alpha2) * data2[j].vDiff // TODO: check whether V11 at i or i-1
+			(data2[j].t - data2[j-1].t) * alpha2 * (1.0-alpha2) * data2[j-1].vDiff
 				 + (1.0-alpha2)*(1.0-alpha2) * data2[j-1].vMeas + alpha2*alpha2 * data2[j].vMeas;
 		
 		*result += cdf_rice(*threshold, meanDistance.norm(), sqrt(varDistance));

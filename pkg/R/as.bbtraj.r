@@ -1,123 +1,138 @@
-as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
-                     slsp =  c("remove", "missing"), make.regular=FALSE)
+as.bbtraj <- function(xys, date, id, burst=id, typeII = TRUE,
+                     slsp =  c("remove", "missing"),
+                     infolocs = data.frame(pkey = paste(id, date, sep=".")),
+                     make.regular=FALSE)
 {
-    ## Various verifications
-    if (typeII) {
-        if (!inherits(date,"POSIXct"))
-            stop("For objects of type II,\n date should be of class \"POSIXct\"")
-    } else {
-        date <- 1:nrow(xys)
-    }
-    if (length(date) != nrow(xys))
-        stop("date should be of the same length as xys")
+	## Various verifications
+	if (typeII) {
+		if (!inherits(date,"POSIXct"))
+			stop("For objects of type II,\n date should be of class \"POSIXct\"")
+	} else {
+		date <- 1:nrow(xys)
+	}
+	if (length(date) != nrow(xys))
+		stop("date should be of the same length as xys")
+	## Length of infolocs, if provided
+	if (!is.null(infolocs)) {
+		if (nrow(infolocs)!=nrow(xys))
+			stop("infolocs should have the same number of rows as xys")
+	}
 
-    slsp <- match.arg(slsp)
+	slsp <- match.arg(slsp)
 
-    ## length of id
-    if (length(id)==1)
-        id <- rep(as.character(id), nrow(xys))
-    if (length(id)!=nrow(xys))
-        stop("id should be of the same length as xys, or of length 1")
-    id <- as.character(id)
+	## length of id
+	if (length(id)==1)
+		id <- rep(as.character(id), nrow(xys))
+	if (length(id)!=nrow(xys))
+		stop("id should be of the same length as xys, or of length 1")
+	id <- as.character(id)
 
-    ## length of burst
-    if (length(burst)==1)
-        burst <- rep(as.character(burst), nrow(xys))
-    if (length(burst)!=nrow(xys))
-        stop("burst should be of the same length as xys, or of length 1")
-    burst <- as.character(burst)
+	## length of burst
+	if (length(burst)==1)
+		burst <- rep(as.character(burst), nrow(xys))
+	if (length(burst)!=nrow(xys))
+		stop("burst should be of the same length as xys, or of length 1")
+	burst <- as.character(burst)
 
-    ## Verification that there is only one burst per id
-    id1 <- factor(id)
-    burst1 <- factor(burst)
-    if (!all(apply(table(id1,burst1)>0,2,sum)==1))
-        stop("one burst level should belong to only one id level")
+	## Verification that there is only one burst per id
+	id1 <- factor(id)
+	burst1 <- factor(burst)
+	if (!all(apply(table(id1,burst1)>0,2,sum)==1))
+		stop("one burst level should belong to only one id level")
 
-    x <- xys[,1]
-    y <- xys[,2]
-    s2 <- xys[,3]
-    res <- split(data.frame(x=x,y=y,diff.coeff=rep(NA,nrow(xys)),loc.var=s2, date=date), burst)
-    liid <- split(id, burst)
+	x <- xys[,1]
+	y <- xys[,2]
+	s2 <- xys[,3]
+	res <- split(data.frame(x=x,y=y,diff.coeff=rep(-1,nrow(xys)),loc.var=s2, date=date), burst)
+	liid <- split(id, burst)
+	
+	if (!is.null(infolocs))
+		linfol <- split(infolocs, burst)
 
-    ## sort the dates
-    res <- lapply(res, function(y) y[order(y$date),])
+	## sort the dates
+	if (!is.null(infolocs))
+		linfol <- lapply(1:length(linfol),
+						 function(j) linfol[[j]][order(res[[j]]$date),,drop=FALSE])
 
-    ## Unique dates?
-    rr <- any(unlist(lapply(res,
-                            function(x) (length(unique(x$date))!=length(x$date)))))
-    if (rr)
-        stop("non unique dates for a given burst")
+	## sort the dates
+	res <- lapply(res, function(y) y[order(y$date),, drop=FALSE])
+
+	## Unique dates?
+	rr <- any(unlist(lapply(res,
+	                        function(x) { length(unique(x$date))!=length(x$date) })))
+	if (rr)
+		stop("non unique dates for a given burst")
 
 
 
-    ## Descriptive parameters
-    foo <- function(x) {
-        x1 <- x[-1, ]
-        x2 <- x[-nrow(x), ]
-        dist <- c(sqrt((x1$x - x2$x)^2 + (x1$y - x2$y)^2),NA)
-        R2n <- (x$x - x$x[1])^2 + (x$y - x$y[1])^2
-        dt <- c(unclass(x1$date) - unclass(x2$date), NA)
-        dx <- c(x1$x - x2$x, NA)
-        dy <- c(x1$y - x2$y, NA)
-        abs.angle <- ifelse(dist<1e-07,NA,atan2(dy,dx))
-        ## absolute angle = NA if dx==dy==0
-        so <- cbind.data.frame(dx=dx, dy=dy, dist=dist,
-                               dt=dt, R2n=R2n, abs.angle=abs.angle)
-        return(so)
-    }
+	## Descriptive parameters
+	foo <- function(x) {
+		x1 <- x[-1, ]
+		x2 <- x[-nrow(x), ]
+		dist <- c(sqrt((x1$x - x2$x)^2 + (x1$y - x2$y)^2),NA)
+		R2n <- (x$x - x$x[1])^2 + (x$y - x$y[1])^2
+		dt <- c(unclass(x1$date) - unclass(x2$date), NA)
+		dx <- c(x1$x - x2$x, NA)
+		dy <- c(x1$y - x2$y, NA)
+		abs.angle <- ifelse(dist<1e-07,NA,atan2(dy,dx))
+		## absolute angle = NA if dx==dy==0
+		so <- cbind.data.frame(dx=dx, dy=dy, dist=dist,
+		                       dt=dt, R2n=R2n, abs.angle=abs.angle)
+		return(so)
+	}
 
-    speed <- lapply(res, foo)
-    res <- lapply(1:length(res), function(i) cbind(res[[i]],speed[[i]]))
+	speed <- lapply(res, foo)
+	res <- lapply(1:length(res), function(i) cbind(res[[i]],speed[[i]]))
 
-    ## The relative angle
-    ang.rel <- function(df,slspi=slsp) {
-        ang1 <- df$abs.angle[-nrow(df)] # angle i-1
-        ang2 <- df$abs.angle[-1] # angle i
+	## The relative angle
+	ang.rel <- function(df,slspi=slsp) {
+		ang1 <- df$abs.angle[-nrow(df)] # angle i-1
+		ang2 <- df$abs.angle[-1] # angle i
 
-        if(slspi=="remove"){
-            dist <- c(sqrt((df[-nrow(df),"x"] - df[-1,"x"])^2 +
-                           (df[-nrow(df),"y"] - df[-1,"y"])^2),NA)
-            wh.na <- which(dist<1e-7)
-            if(length(wh.na)>0){
-                no.na <- (1:length(ang1))[!(1:length(ang1)) %in% wh.na]
-                for (i in wh.na){
-                    indx <- no.na[no.na<i]
-                    ang1[i] <- ifelse(length(indx)==0,NA,ang1[max(indx)])
-                }
-            }
-        }
-        res <- ang2-ang1
-        res <- ifelse(res <= (-pi), 2*pi+res,res)
-        res <- ifelse(res > pi, res -2*pi,res)
-        return(c(NA,res))
-    }
+		if(slspi=="remove"){
+			dist <- c(sqrt((df[-nrow(df),"x"] - df[-1,"x"])^2 +
+			               (df[-nrow(df),"y"] - df[-1,"y"])^2),NA)
+			wh.na <- which(dist<1e-7)
+			if(length(wh.na)>0){
+				no.na <- (1:length(ang1))[!(1:length(ang1)) %in% wh.na]
+				for (i in wh.na){
+					indx <- no.na[no.na<i]
+					ang1[i] <- ifelse(length(indx)==0,NA,ang1[max(indx)])
+				}
+			}
+		}
+		res <- ang2-ang1
+		res <- ifelse(res <= (-pi), 2*pi+res,res)
+		res <- ifelse(res > pi, res -2*pi,res)
+		return(c(NA,res))
+	}
 
-    ## Output
-    rel.angle <- lapply(res, ang.rel)
-    res <- lapply(1:length(res),
-                  function(i) data.frame(res[[i]], rel.angle=rel.angle[[i]]))
-    res <- lapply(1:length(res), function(i) {
-        x <- res[[i]]
-        attr(x, "id") <- as.character(liid[[i]][1])
-        attr(x,"burst") <- levels(factor(burst))[i]
-        return(x)
-    })
+	rel.angle <- lapply(res, ang.rel)
+	res <- lapply(1:length(res),
+	              function(i) data.frame(res[[i]], rel.angle=rel.angle[[i]]))
+	res <- lapply(1:length(res), function(i) {
+		x <- res[[i]]
+		attr(x, "id") <- as.character(liid[[i]][1])
+		attr(x,"burst") <- levels(factor(burst))[i]
+		return(x)
+	})
 
-    ## The diffusion coefficient
-    class(res) <- c("bbtraj","ltraj","list")
-    attr(res,"typeII") <- typeII
-    attr(res,"regular") <- is.regular(res)
-    
-    
-    s2 <- .diffusion_coefficient(res, c(0,10)); # TODO: make sure the range for the coefficient works out
+	## The diffusion coefficient
+	class(res) <- c("bbtraj","ltraj","list")
+	attr(res,"typeII") <- typeII
+	attr(res,"regular") <- is.regular(res)
+	
+	
+	
+	s2 <- diffusionCoefficient(res)
 	res <- lapply(res, function(b) {
-		b$diff.coeff <- s2[[attr(b, "id")]]
+		b$diff.coeff <- s2[attr(b, "id")]
 		return(b)
 	})
 	
-    class(res) <- c("bbtraj","ltraj","list")
-    attr(res,"typeII") <- typeII
-    attr(res,"regular") <- is.regular(res)
+	class(res) <- c("bbtraj","ltraj","list")
+	attr(res,"typeII") <- typeII
+	attr(res,"regular") <- is.regular(res)
 	
 	if (is.list(make.regular)) {
 		# call setNA and sett0 to make the trajectory regular
@@ -135,12 +150,23 @@ as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
 		attributes(res) <- attributes(ltraj)
 	}
 
-	## Output
-    class(res) <- c("bbtraj","ltraj","list")
-    attr(res,"typeII") <- typeII
-    attr(res,"regular") <- is.regular(res)
+	## And possibly, the data.frame infolocs
+	if (!is.null(infolocs)) {
+		res <- lapply(1:length(res), function(i) {
+			x <- res[[i]]
+			y <- linfol[[i]]
+			row.names(y) <- row.names(x)
+			attr(x, "infolocs") <- y
+			return(x)
+		})
+	}
 
-    return(res)
+	## Output
+	class(res) <- c("bbtraj","ltraj","list")
+	attr(res,"typeII") <- typeII
+	attr(res,"regular") <- is.regular(res)
+
+	return(res)
 }
 
 "[.bbtraj" <- function(x, i, id, burst)
@@ -161,59 +187,77 @@ as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
 	
 	y <- "[<-.ltraj"(x, i, id, burst, value)
 	
-    class(y) <- class(x)
-    return(y)
+	class(y) <- class(x)
+	return(y)
 }
 
-".diffusion_coefficient" <- function (tr, rangesig1, le=1000, byburst = FALSE)
-{
-    x <- adehabitatLT:::.ltraj2traj(tr)
-    if (!inherits(x, "traj"))
-        stop("tr should be of class \"ltraj\"")
+"diffusionCoefficient" <- function (tr, byburst = FALSE, nsteps = 1000) {
+	tr <- bbFilterNA(tr)
 
-    sorties <- list()
-    gr <- grid
-    x <- x[!is.na(x$x), ]
-    x <- x[!is.na(x$y), ]
+	resultNames <- unique(id(tr))
+	if (byburst) {
+		resultNames <- burst(tr)
+	}
+	
+	inputData <- list()
+	for (n in resultNames) { inputData[[n]] <- matrix(0, nrow=3, ncol=0) }
+	maxDiffCoeff <- rep(0, length(resultNames)) # For each element of the result, find a proper range to search
+	names(maxDiffCoeff) <- resultNames
 
-    fac <- x$burst
-    if (!byburst)
-        fac <- x$id
-    fac <- factor(fac)
-    lixy <- split(x, fac)
-    so <- list()
-    for (i in 1:length(lixy)) {
-        dft <- lixy[[i]]
-        df <- dft[, c("x", "y", "loc.var")]
-        vsig <- seq(rangesig1[1], rangesig1[2],
-                    length=le)
-        date <- as.double(dft$date) - min(as.double(dft$date))
-        huhu <- .C("diffusion", as.double(t(as.matrix(df))),
-                   as.double(date), as.integer(nrow(df)),
-                   double(length(vsig)), as.double(vsig^2),
-                   as.integer(length(vsig)),
-                   PACKAGE="movementAnalysis")
-                   
-       # C implementation signature:
-       # void diffusion_static(double *xyr, double *Tr, 
-       #	 int *nloc, double *Lr, double *sigma, int *nsig)
-       
-       # Maximisation of the likelihood for the Brownian bridge
-       
-       # Meaning of the params:
-       # xyr    The location data
-       # Tr     Relative time of the measurements
-       # nloc   Number of location measurements
-       # Lr     Log-likelihood for each considered value of the diffusion coefficient
-       # sigma  The values of the diffusion coefficient to consider
-       # nsig   The number of different diffusion coefficients to consider
-       # sigma2 The location uncertainty variance
+	# For each even numbered measurement in a burst (except the last if burst has even length):
+	#  - compute the relevant parameters for the estimation of the diffusion coefficient:
+	#      - the distance between the observation and the mean derived from the neighbouring observations
+	#      - parameters used to compute the location variance from the diffusion coefficient
+	#  - compute the ML value for the diffusion coefficient looking only at one bridge.
+	#      When the diffusion coefficient gets larger than the maximum of these,
+	#      the likelihood of the observations becomes a decreasing function of the diffusion coefficient.
+	for (b in 1:length(tr)) {
+		burst <- tr[[b]]
 
-       so[[i]] <- vsig[which.max(huhu[[4]])] # select the sigma1 that maximizes the likelihood
-    }
-    names(so) <- names(lixy)
-    #class(so) <- "liker"
-    return(so)
+		if (nrow(burst) >= 3) { # We can't estimate the likelihood for shorter bursts
+			burst$date <- as.double(burst$date) - min(as.double(burst$date))
+		
+			bdata <- matrix(NA, nrow=3, ncol=floor((nrow(burst)-1)/2))
+		
+			fac <- attr(burst, ifelse(byburst, "burst", "id"))
+			# i runs over all even numbers that have a measurement before and after them
+			for (i in seq(2, nrow(burst)-1, by=2)) {
+				alpha <- (burst$date[i] - burst$date[i-1]) / (burst$date[i+1] - burst$date[i-1])
+			
+				# Squared distance from measured loc to estimated mean
+				bdata[1, i/2] <- 
+						(burst$x[i] - (1-alpha) * burst$x[i-1] - alpha * burst$x[i+1])^2 +
+						(burst$y[i] - (1-alpha) * burst$y[i-1] - alpha * burst$y[i+1])^2
+				# The coefficients for a linear function mapping diffusion coefficient to variance
+				bdata[2, i/2] <- (burst$date[i+1]-burst$date[i-1]) * alpha * (1-alpha)
+				bdata[3, i/2] <- (1-alpha)^2*burst$loc.var[i-1] + alpha^2*burst$loc.var[i+1]
+			
+				# Find the variance at which this bridge reaches its maximum likelihood
+				maxVar <- 0.5 * bdata[1, i/2]
+				maxDiffCoeff[fac] <- max(maxDiffCoeff[fac], (maxVar-bdata[3, i/2])/bdata[2, i/2])
+			}
+			
+			inputData[[fac]] <- cbind(inputData[[fac]], bdata)
+		}
+	}
+	
+	result <- rep(NA, length(resultNames))
+	names(result) <- resultNames
+	for(fac in names(result)) {
+		if (maxDiffCoeff[fac] <= 0) {
+			# We already know that the ML is achieved for diff.coeff 0
+			result[fac] <- 0
+		} else {
+			candidates <- seq(0,maxDiffCoeff[fac], length.out=nsteps)
+		
+			cResult <- .C("diffusion_static", double(1),
+					c(inputData[[fac]]), ncol(inputData[[fac]]),
+					candidates, length(candidates), PACKAGE="movementAnalysis")
+			result[fac] <- cResult[[1]]
+		}
+	}
+	
+	return(result)
 }
 
 "bbFilterNA" <- function(tr) {
@@ -232,7 +276,7 @@ as.bbtraj <- function(xys, date=NULL, id, burst=id, typeII = TRUE,
 		
 		return(newBurst)
 	})
-	trNew <- trNew[sapply(trNew, function(b) { nrow(b) > 0})]
+	trNew <- trNew[unlist(sapply(trNew, function(b) { nrow(b) > 0}))]
 	attributes(trNew) <- attributes(tr)
 	class(trNew) <- class(tr)
 	return(trNew)

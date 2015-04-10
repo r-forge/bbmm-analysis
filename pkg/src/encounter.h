@@ -73,10 +73,17 @@ void diffusion(double *xys, double *Tr,
 
 }; // extern "C"
 
+// d2 is the squared distance between mu and p in the next function
+inline double pdf_norm2d(double d2, double var)
+{
+	// straightforward implementation of the expression for the pdf of N(mu, sigma^2)
+    return exp(d2 / (-2.0 * var)) / (2 * PI * var);
+}
+
 inline double pdf_norm2d(Vec2D<double> p, Vec2D<double> mu, double var)
 {
 	// straightforward implementation of the expression for the pdf of N(mu, sigma^2)
-    return exp((p-mu).norm2() / (-2.0 * var)) / (2 * PI * var);
+    return pdf_norm2d((p-mu).norm2(), var);
 }
 
 double marcumQ(const double alpha, const double beta);

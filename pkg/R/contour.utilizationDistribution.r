@@ -1,5 +1,5 @@
-contour.utilizationDistribution <- function (ud, levels=0.99, col=rainbow(length(ud)),
-		xlim=NULL, ylim=NULL, labels=levels, add=FALSE, ...) {	
+contour.utilizationDistribution <- function (ud, levels=0.99, col=hcl(1:length(ud) * 360/length(ud), l=35),
+		xlim=NULL, ylim=NULL, labels=levels, add=FALSE, ...) {
 	if (inherits(ud[[1]], "asc")) {
 		coords <- sapply(ud, getXYcoords)
 		xc <- coords['x',1][[1]]

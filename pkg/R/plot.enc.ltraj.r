@@ -99,7 +99,7 @@ plot.enc.ltraj <- function (x, id = unique(unlist(lapply(x, attr, which="id"))),
         if (addlines) {
             xtmp <- x[id=i]
             # TODO: This is big time cheating. Only two bursts will have their lines plotted, but they will have encounters
-            coordinates <- encounter_segments(xtmp[[1]], xtmp[[2]], threshold)
+            coordinates <- encounterSegments(xtmp[[1]], xtmp[[2]], threshold)
             for (j in 1:2) {
             	xc <- coordinates[[j]]$x
             	yc <- coordinates[[j]]$y
@@ -132,8 +132,8 @@ plot.enc.ltraj <- function (x, id = unique(unlist(lapply(x, attr, which="id"))),
 }
 
 
-"encounter_segments" <- function(b1, b2, threshold) {
-	intervals <- as.vector(t(encounter_intervals(b1, b2, threshold)))
+"encounterSegments" <- function(b1, b2, threshold) {
+	intervals <- as.vector(t(.encounterIntervals(b1, b2, threshold)))
 	
 	return(list(.burst_encounter_segments(b1, intervals),
 			.burst_encounter_segments(b2, intervals)))

@@ -2,6 +2,7 @@
 \alias{as.bbtraj}
 \alias{bbtraj}
 \alias{bbFilterNA}
+\alias{diffusionCoefficient}
 %\alias{print.bbtraj}
 %\alias{summary.bbtraj}
 \docType{data}
@@ -15,9 +16,12 @@ The class \code{bbtraj} stores trajectories of animals, similar to the class \co
 \code{bbFilterNA} filters the missing measurements from a trajectory, removing bursts that are empty after this filtering.
 }
 \usage{
-as.bbtraj(xys, date = NULL, id, burst = id, typeII = TRUE,
-          slsp = c("remove", "missing"), make.regular=FALSE)
+as.bbtraj(xys, date, id, burst = id, typeII = TRUE,
+          slsp =  c("remove", "missing"),
+          infolocs = data.frame(pkey = paste(id, date, sep=".")),
+          make.regular=FALSE)
 bbFilterNA(tr)
+diffusionCoefficient(tr, byburst = FALSE, nsteps = 1000)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -37,13 +41,18 @@ bbFilterNA(tr)
     the snow)}
   \item{slsp}{a character string used for the computation of the
     turning angles (for details, see \code{\link{as.ltraj}})}
+  \item{infolocs}{ If not \code{NULL}, a data.frame containing extra information about the relocations.}
   \item{make.regular}{Either \code{FALSE}, or a list specifying the arguments to \code{\link{setNA}} and \code{\link{sett0}}.}
   \item{tr}{A trajectory of class \code{ltraj} or \code{bbtraj}}
+  \item{byburst}{A logical indicating whether a different diffusion coefficient should be estimated for each burst.}
+  \item{nsteps}{The number of different values for the diffusion coefficient to test. The range in which the value can be is determined automatically.}
 }
 \details{
 If \code{make.regular} is not \code{FALSE}, it must be a list containing parameters
 accepted by \code{setNA} and \code{sett0}, by the same names or in the proper order.
 as these functions are used to make the resulting trajectory regular.
+
+\code{diffusionCoefficient} can be used to estimate the diffusion coefficient for an already existing \code{bbtraj} object. When calling \code{as.bbtraj}, it is invoked automatically. However, one might want to re-estimate the diffusion coefficient after modifying some values or constructing a trajectory from scratch.
 }
 \value{
   An object of class \code{bbtraj} is a list with one component per burst of
@@ -54,7 +63,7 @@ as these functions are used to make the resulting trajectory regular.
 \item{x}{the x coordinate for each relocation}
 \item{y}{the y coordinate for each relocation}
 \item{diff.coeff}{The diffusion coefficient for the move. This has no
-  meaning if the previous relocation is missing, but usually it is set
+  meaning if the next relocation is missing, but usually it is set
   to the same value for many relocations.}
 \item{loc.var}{The variance of the measured position}
 \item{date}{the date for each relocation (type II) or a vector of
@@ -77,6 +86,9 @@ as these functions are used to make the resulting trajectory regular.
 \item{rel.angle}{the turning angles between successive moves.  At least
   three successive relocations are needed to compute \code{rel.angle}.
   Missing values are returned otherwise.}
+  
+  \code{diffusionCoefficient} returns a vector containing the optimal values
+  for each id or burst.
 }
 \references{
 %% ~put references to the literature/web site here ~
