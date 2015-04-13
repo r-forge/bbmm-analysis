@@ -90,6 +90,48 @@ setMethod(f = "diffusionCoefficient",
 	)
 }
 
+"diffusion.LL" <- function(trs, dc.values) {
+	# For each even numbered measurement in a burst (except the last if burst has even length):
+	#  - compute the relevant parameters for the estimation of the diffusion coefficient:
+	#      - the distance between the observation and the mean derived from the neighbouring observations
+	#      - parameters used to compute the location variance from the diffusion coefficient
+	#  - compute the ML value for the diffusion coefficient looking only at one bridge.
+	#      When the diffusion coefficient gets larger than the maximum of these,
+	#      the likelihood of the observations becomes a decreasing function of the diffusion coefficient.
+	#	for (b in 1:length(trs)) {
+	res <- sapply(trs, function(burst) {
+		if (nrow(burst) >= 3) { # We can't estimate the likelihood for shorter bursts
+			burst$date <- as.double(burst@timestamps) - min(as.double(burst@timestamps))
+				
+		#	bdata <- matrix(NA, nrow=3, ncol=floor((nrow(burst)-1)/2))
+		
+			## i runs over all even numbers that have a measurement before and after them
+			ll <- rep(0, length(dc.values))
+			for (i in seq(2, nrow(burst)-1, by=2)) {
+				alpha <- (burst$date[i] - burst$date[i-1]) / (burst$date[i+1] - burst$date[i-1])
+			
+				## Squared distance from measured loc to estimated mean
+				d2 <- sum((
+						              burst@coords[i,]
+						- (1-alpha) * burst@coords[i-1,]
+						- alpha     * burst@coords[i+1,]
+					)^2)
+				## The coefficients for a linear function mapping diffusion coefficient to variance
+				c1 <- (burst$date[i+1]-burst$date[i-1]) * alpha * (1-alpha)
+				c0 <- (1-alpha)^2*burst@variance[i-1] + alpha^2*burst@variance[i+1]
+				
+				var <- c1 * dc.values + c0
+				ll <- ll - log(2*pi) - log(var) - (0.5*d2 / var)
+			}
+			ll
+		} else {
+			rep(NA, length(dc.values))
+		}
+	})
+	rownames(res) <- as.character(dc.values)
+	res
+}
+
 ".diffusionCoefficient.horne" <- function(trs, burstNames, nsteps) {
 		resultNames <- unique(burstNames)
 		
