@@ -17,7 +17,7 @@ Given the result from a call to \code{\link{encounterDuration}}, this function d
   \item{\dots}{Other \link{graphical parameters}, e.g. from \code{\link{barplot.default}}.}
 }
 \details{
-If \code{height} is an array, i.e. it was the result from a call to \code{\link{encounterDuration}} with \code{byburst=FALSE}, the name displayed under each pair of bars are the names of the IDs involved, separated by a hyphen.
+If \code{height} is an array, i.e. it was the result from a call to \code{\link{encounterDuration}} with \code{groupBy=NULL}, the name displayed under each pair of bars are the names of the IDs involved, separated by a hyphen.
 Otherwise, you may specify the labels yourself in the row names of \code{height} (which is a \code{data.frame}). If all labels are numeric, this function replaces them by the names of the bursts involved, separated by a hyphen.
 }
 \value{
@@ -30,7 +30,7 @@ Otherwise, you may specify the labels yourself in the row names of \code{height}
 \examples{
 data("vervet_monkeys", package="movementAnalysis")
 	
-ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
+ed <- encounterDuration(monkey.tr, 100, groupBy="GroupID")
 barplot(ed)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -1,4 +1,7 @@
 useDynLib(movementAnalysis)
+importFrom(maptools, checkPolygonsHoles)
+importFrom(lmomco, pdfrice, cdfrice, quarice, LaguerreHalf)
+import(raster)
 import(move)
 exportPattern("^[^\\.]")
 exportClasses(

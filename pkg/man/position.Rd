@@ -24,11 +24,6 @@ If a requested time does not have a relocation, the values are interpolated
 in the usual way for the Brownian bridge movement model.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 An array indexed by ID, parameter name, time.
 }
 

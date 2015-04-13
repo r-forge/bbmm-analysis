@@ -82,19 +82,4 @@ setMethod(f="contourPolygons",
 	values(ud) <- alphaLevel
 	ud
 }
-UDa <- .UD.alphaLevels
 
-".UD.coords" <- function(ud) {
-	if (inherits(ud[[1]], "asc")) {
-		return(adehabitat::getXYcoords(ud[[1]]))
-	} else {
-		xc <- as.double(rownames(ud[[1]]))
-		yc <- as.double(colnames(ud[[1]]))
-		
-		if (!is.null(xc) && !is.null(yc)) {
-			return(list(x=xc, y=yc))
-		}
-	}
-	
-	list(x=seq(0,1,length.out=nrow(ud[[1]])), y=seq(0,1,length.out=ncol(ud[[1]])))
-}
