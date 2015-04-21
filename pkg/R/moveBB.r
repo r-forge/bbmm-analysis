@@ -6,7 +6,12 @@ setMethod(f="moveBB",
 	}
 )
 setMethod(f="moveBB",
-	signature=c(var="numeric",data="missing"), 
+	signature=c(x=".MoveTrack", y="missing", var="numeric", time="missing", data="missing", proj="missing"),
+	definition = function (x, y=NULL, var, time=NULL, data=NULL, proj=NULL, ...) {
+		.moveBB(x, var)
+})
+setMethod(f="moveBB",
+	signature=c(var="numeric", data="missing"), 
 	definition = function(x,y,var,time,data,proj,...){
 		data <- data.frame(x,y,var,time)
 		moveBB(x=x, y=y, var=var, time=time, data=data, proj=proj,...)

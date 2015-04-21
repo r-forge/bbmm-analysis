@@ -37,15 +37,6 @@ void diffusion_static(double *result,
 		// given a bridge between its neighbors
 		for (size_t i=0; i < n; i++) {
 			ll += log(pdf_norm2d(bridges[i].d2, bridges[i].c1 * sigma[r] + bridges[i].c0));
-		
-//			ai = (Tr[i] - Tr[i-1])/(Tr[i+1] - Tr[i-1]);
-//	
-//			muX = (1.0-ai) * D_X(i-1) + ai * D_X(i+1);
-//			muY = (1.0-ai) * D_Y(i-1) + ai * D_Y(i+1);
-//	
-//			sigmai = ((Tr[i+1]-Tr[i-1]) * ai * (1-ai) * sigma[r]) + ((1.0-ai)*(1.0-ai) * D_S2(i-1)) + (ai*ai * D_S2(i+1));
-//	
-//			Lr[r] += log(norm2d(D_X(i), D_Y(i), muX, muY, sigmai));
 		}
 		
 		if (ll > llMax) {
