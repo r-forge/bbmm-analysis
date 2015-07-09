@@ -128,6 +128,7 @@ setMethod(f = "diffusionCoefficient",
 			rep(NA, length(dc.values))
 		}
 	})
+	res <- matrix(res, nrow=length(dc.values))
 	attr(res, "dc.values") <- dc.values
 	rownames(res) <- as.character(dc.values)
 	res

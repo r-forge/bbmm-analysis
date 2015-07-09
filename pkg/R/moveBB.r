@@ -21,7 +21,11 @@ setMethod(f="moveBB",
 	signature=c(x="numeric", y="numeric", var="numeric", time="POSIXct", data="data.frame", proj="ANY"), 
 	definition = function(x,y,var,time,data,proj,sensor='unknown',animal='unnamed', ...){
 		# Create a move object, then compose it with the extra BB properties
-		.moveBB(move(x, y, time, data, proj, sensor, animal, ...), var[!is.na(x)])
+		if (length(var) == length(x)) {
+			# Drop variance for missing observations to align correctly
+			var <- var[!is.na(x)]
+		}
+		.moveBB(move(x, y, time, data, proj, sensor, animal, ...), var)
 	}
 )
 
