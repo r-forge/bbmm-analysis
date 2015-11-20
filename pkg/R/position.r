@@ -1,9 +1,9 @@
 # Provides location information for each id in the trajectory at the given time(s)
 setGeneric("position", function(object, time, groupBy=NULL) standardGeneric("position"))
 setMethod(f = "position",
-	signature = c(time="POSIXct"),
-	definition = function(object, time) {
-	p <- position(object, as.double(time))
+		signature = c(time="POSIXct"),
+		definition = function(object, time, groupBy=NULL) {
+	p <- position(object, as.double(time), groupBy)
 	if (inherits(object, "MoveBBStack")) {
 		dimnames(p)[[3]] <- format(time, usetz=TRUE)
 	} else {
@@ -13,8 +13,8 @@ setMethod(f = "position",
 })
 
 setMethod(f = "position",
-	signature = c(object="MoveBB", time="numeric"),
-	definition = function(object, time) {
+		signature = c(object="MoveBB", time="numeric"),
+		definition = function(object, time) {
 	res <- sapply(time, function(t) {
 		# Extract the bursts that contain the selected time	
 		res <- c(x=NA, y=NA, var=NA)
@@ -30,8 +30,6 @@ setMethod(f = "position",
 					}
 					diff0T <- diff0T$value
 					diff0t <- diff0t$value
-					print(diff0T)
-					print(diff0t)
 					alpha <- diff0t / diff0T
 					res[c("x","y")] <- (1-alpha)*object@coords[j-1,] + alpha*object@coords[j,]
 					res["var"] <- (
@@ -59,41 +57,59 @@ setMethod(f = "position",
 ## applies the function identified by "name" to each element and merges the results.
 .mBBStack_statistic <- function (object, time, groupBy=NULL, name=c("position","velocity",".speed_statistic",".direction_statistic"), ...) {
 	name <- match.arg(name)
+	fun <- match.fun(name)
 
-	tr <- split(object)
-	
-	tr.id <- .IDs(object, groupBy)
-	ids <- unique(tr.id)
-	
-	# Collect positions for each burst and group them by their ID
-	tr.pos <- lapply(tr, name, time, ...)
-	id.pos <- split(tr.pos, tr.id)
-	
-	# Merge the positions of the bursts for each ID
-	res <- lapply(id.pos, function(p) {
-		p.set <- sapply(p, function(p) {
-			apply(p, 1, function(row) { all(!is.na(row)) })
-		})
-		dim(p.set) <- c(length(time), length(p)) # Make sure it is always a matrix
-		dimnames(p.set) <- list(time, names(p))
+	if (is.null(groupBy)) {
+		trs <- split(object)
+	} else {
+		trs <- split(object, groupBy)
+	}
 
-		# Check that no two bursts contain a position for the same time
-		if (any(apply(p.set, 1, sum) > 1)) {
-			stop("Multiple bursts for same ID overlap")
+	## Sort time argument, undo after computation
+	to <- order(time)
+	time <- time[to]
+
+	res <- lapply(trs, function(x, time, ...) {
+		## Split into all bursts
+		if (class(x) == "MoveBB") {
+			xs <- list(x)
+		} else {
+			xs <- split(x)
 		}
 		
-		# Select all the set values from the different bursts
-		p.select <- apply(p.set, 1, which.max)
-		pos <- sapply(1:length(p.select), function(i) {
-			p[[p.select[i]]][i,]
-		})
-		matrix(as.double(pos), ncol=length(time), dimnames=list(colnames(p[[1]]) ,time))
-	})
+		## Sort burst by starting time
+		xs <- xs[order(sapply(xs, function(x) { x@timestamps[1] }))]
 	
-	fieldNames <- rownames(res[[1]])
+		fieldnames <- colnames(fun(xs[[1]], seq_len(0)))
+		res <- matrix(NA, ncol=length(fieldnames), nrow=length(time),
+				dimnames=list(time, fieldnames))
+	
+		ti <- 1
+		## go through bursts one by one
+		for (x in xs) {
+			## Find where burst starts and ends in the list of timestamps
+			while (ti < length(time) && time[ti] < x@timestamps[1]) { 
+				ti <- ti+1 
+			}
+			tstart <- ti
+			while (ti <= length(time) && time[ti] <= x@timestamps[nrow(x)]) {
+				ti <- ti+1
+			}
+			tfinish <- ti ## Points to element past last used
+			ts <- seq_len(tfinish-tstart) + tstart - 1
+		
+			## Call the target function on a subset of timestamps
+			if (length(ts) > 0) {
+				res[ts,] <- fun(x, time[ts], ...)
+			}
+		}
+		res
+	}, time, ...)
+
+	fieldNames <- colnames(res[[1]])
 	# Convert to 3d array, set correct order of dimensions
 	res <- simplify2array(res)
-	dim(res) <- c(length(fieldNames), length(time), length(ids))
-	dimnames(res) <- list(fieldNames, as.character(time), ids)
-	aperm(res, c(3,1,2))
+	dimnames(res) <- list(as.character(time[to]), fieldNames, names(trs))
+	res[to,,] <- res # Undo sorting by time
+	aperm(res, c(3,2,1))
 }

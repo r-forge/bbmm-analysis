@@ -27,7 +27,7 @@ setMethod(f = ".distance_statistic",
 		# Construct an array indexed by time stamp and two IDs.
 		# Each element holds the requested statistic for these two groups at that time
 		positions <- position(tr, time, groupBy)
-		res <- sapply(1:length(time), function(t) {
+		res <- mclapply(seq_len(length(time)), function(t) {
 			params <- positions[,,t]
 		
 			res <- array(rep(diagonal_value, length(value)*length(ids)^2), dim=c(length(ids),length(ids),length(value)))
@@ -46,9 +46,7 @@ setMethod(f = ".distance_statistic",
 			}
 			return(res)
 		})
-		
-		# Res is now a vector; it really is a 4 dimensional array
-		dim(res) <- c(length(ids), length(ids), length(value), length(time))
+		res <- simplify2array(res)
 		dimnames(res) <- list(ids, ids, value, time)
 	
 		return(res)

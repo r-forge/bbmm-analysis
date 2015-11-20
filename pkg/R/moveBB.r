@@ -29,6 +29,23 @@ setMethod(f="moveBB",
 	}
 )
 
+setAs("MoveBBStack", "MoveBB", function(from) {
+	m <- from
+	class(m) <- "MoveBB"
+	## MoveBB is sorted by time instead of ID,time as in MoveBBStack
+	m <- m[order(m@timestamps)]
+	for (n in names(m@idData)) {
+		if (length(m@idData[[n]]) > 1) {
+			## Not idData for the coerced object
+			m@idData[[n]] <- NULL
+			#TODO: insert as regular data?
+		} else if (is.factor(m@idData[[n]])) {
+			m@idData[[n]] <- droplevels(m@idData[[n]])	
+		}
+	}
+	m
+})
+
 .moveBB <- function(moveObj, var) {
 	if (length(var) == 1) {
 		var <- rep(var, nrow(moveObj@coords))
