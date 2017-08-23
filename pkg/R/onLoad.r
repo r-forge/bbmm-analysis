@@ -9,5 +9,5 @@
 }
 
 ".onUnload" <- function(libpath) {
-	library.dynam.unload("movementAnalysis", libpath);
+	library.dynam.unload("moveBB", libpath);
 }

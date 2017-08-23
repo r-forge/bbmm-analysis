@@ -185,7 +185,7 @@ setMethod(f = "diffusionCoefficient",
 		
 				cResult <- .C("diffusion_static", double(1),
 						c(inputData[[fac]]), ncol(inputData[[fac]]),
-						candidates, length(candidates), PACKAGE="movementAnalysis")
+						candidates, length(candidates), PACKAGE="moveBB")
 				result[fac] <- cResult[[1]]
 			}
 		}
@@ -261,7 +261,7 @@ setMethod(f = "diffusionCoefficient",
 		
 			cResult <- .C("diffusion_static", double(1),
 					c(inputData[[fac]]), ncol(inputData[[fac]]),
-					candidates, length(candidates), PACKAGE="movementAnalysis")
+					candidates, length(candidates), PACKAGE="moveBB")
 			result[fac] <- cResult[[1]]
 		}
 	}

@@ -105,7 +105,7 @@
 			double(1), as.double(dist),
 			as.integer(nrow(d1)), as.double(data1),
 			as.integer(nrow(d2)), as.double(data2),
-			as.double(timestepSize), PACKAGE="movementAnalysis")
+			as.double(timestepSize), PACKAGE="moveBB")
 	cResult[[1]] # The result is collected in the first C argument
 }
 
@@ -129,6 +129,6 @@
 	cResult <- .C("encounterBBMM",
 			double(1), as.double(dist),
 			as.integer(nrow(data)), as.double(t(data)),
-			PACKAGE="movementAnalysis")
+			PACKAGE="moveBB")
 	cResult[[1]] # The result is collected in the first C argument
 }

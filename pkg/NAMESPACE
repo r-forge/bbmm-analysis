@@ -1,4 +1,4 @@
-useDynLib(movementAnalysis)
+useDynLib(moveBB)
 importFrom(maptools, checkPolygonsHoles)
 importFrom(lmomco, pdfrice, cdfrice, quarice, LaguerreHalf)
 import(raster)

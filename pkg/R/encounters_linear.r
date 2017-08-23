@@ -51,7 +51,7 @@
 #		cResult <- .C("encounterLinearIntervals", double(1), as.double(d),
 #				as.integer(n1), as.double(data1),
 #				as.integer(n2), as.double(data2),
-#				as.integer(0), double(2*(n1 + n2)), PACKAGE="movementAnalysis")
+#				as.integer(0), double(2*(n1 + n2)), PACKAGE="moveBB")
 #	
 #		intervals <- matrix(cResult[[8]], nrow=2)
 #		intervals <- intervals[, !is.nan(intervals[1,]) & !is.nan(intervals[2,]), drop=F]
