@@ -11,8 +11,9 @@ setMethod(f = "classify",
 setMethod(f = "classify",
 		signature = c(object="MoveBBStack", LL="numeric"),
 		definition = function (object, LL, p) {
-	dc.range <- range(diffusionCoefficient(object))
-	dc.values <- seq(dc.range[1], dc.range[2], length.out=LL)
+	dc.alpha <- 3 ## Exponent for power-law distribution of values
+	dc.range <- range(diffusionCoefficient(object))^(1/dc.alpha)
+	dc.values <- seq(dc.range[1], dc.range[2], length.out=LL)^dc.alpha
 	tr.ll <- diffusion.LL(split(object), dc.values)
 	classify(object, tr.ll, p)
 })
@@ -20,7 +21,7 @@ setMethod(f = "classify",
 setMethod(f = "classify",
 		signature = c(object="MoveBBStack", LL="matrix", p="missing"),
 		definition = function (object, LL, p) {
-	.classify(LL, 2*log(ncol(LL))) ## Use BIC by default
+	.classify(LL, log(ncol(LL))) ## Use BIC by default
 })
 
 setMethod(f = "classify",
@@ -28,6 +29,8 @@ setMethod(f = "classify",
 		definition = function (object, LL, p) {
 	.classify(LL, p)
 })
+
+
 
 ".classify" <- function(LL, p) {
 	

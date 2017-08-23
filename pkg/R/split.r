@@ -35,7 +35,7 @@ setMethod(f = "split",
 		# First generate lists of observations for each subset
 		obs.id <- split(seq_len(nrow(x)), f)
 		# Then extract the requested observations using subsetting
-		mclapply(obs.id, function(i) { x[i] })
+		lapply(obs.id, function(i) { x[i] })
 })
 
 

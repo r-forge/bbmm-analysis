@@ -48,7 +48,7 @@ setMethod(f = ".speed_statistic",
 	signature = c(time="POSIXct", time.scale="numeric"),
 	definition = function(object, time, time.scale, value, fn, groupBy=NULL) {
 		s <- .speed_statistic(object, as.double(time), time.scale, value, fn, groupBy)
-		dimnames(s)[[3]] <- format(time, usetz=TRUE)
+		dimnames(s)[[if(length(dim(s)) == 3) { 3 } else { 1 }]] <- format(time, usetz=TRUE)
 		s
 })
 

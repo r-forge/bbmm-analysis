@@ -89,3 +89,4 @@ IDs <- function(moveObj, groupBy=NULL) {
 	ids
 }
 .IDs <- IDs # Deprecated hidden version of the IDs function
+

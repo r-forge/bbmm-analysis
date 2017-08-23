@@ -17,7 +17,7 @@ setMethod(f = "diffusion<-",
 		# with groupBy != NULL, expand the result
 		diffusion <- diffusion[as.character(attr(value, 'grouping'))]
 		names(diffusion) <- names(attr(value, 'grouping'))
-	} else if (is.null(names(diffusion))) {
+	} else if (is.null(names(diffusion)) && inherits(object, "MoveBBStack")) {
 		names(diffusion) <- levels(object@trackId)
 	}
 	
@@ -47,14 +47,7 @@ setMethod(f="diffusion.convert", signature=c(dc.obj="matrix"),
 	## Each row specifies the diffusion coefficient from the given time
 	## up to the timestamp in the next row
 	function(ts) {
-		## For each requested time, find the link in which the timestamp belongs
-		sapply(ts, function(timestamp) {
-			i <- which(dc.obj[,1] > timestamp) - 1
-
-			if (length(i) == 0 || i[1] == 0) { return (0) } # Clip to given range
-			#TODO: placeholder solution, fix for real
-			dc.obj[i[1],2]
-		})
+		.interpolate(dc.obj, ts, interpolation="constant")
 	}
 })
 
@@ -83,7 +76,7 @@ setMethod(f = "diffusionCoefficient",
 
 ".diffusionCoefficient" <- function(trs, groupBy, nsteps, method=c("horne","new")) {
 	method <- match.arg(method)
-	burstNames <- unlist(unname(lapply(trs, .IDs, groupBy)))
+	burstNames <- unlist(unname(lapply(trs, IDs, groupBy)))
 	switch(method,
 		horne=.diffusionCoefficient.horne(trs, burstNames, nsteps),
 		new  =.diffusionCoefficient.new  (trs, burstNames, nsteps)
@@ -201,6 +194,14 @@ setMethod(f = "diffusionCoefficient",
 			names(burstNames) <- names(trs)
 			attr(result, 'grouping') <- burstNames
 		}
+		
+		LL <- rep(NA, length(trs))
+		names(LL) <- names(trs)
+		for (tn in 1:length(trs)) {
+			LL[tn] <- diffusion.LL(trs[tn], result[burstNames[tn]])
+		}
+		
+		attr(result, "LL") <- LL
 		return(result)
 }
 
@@ -267,3 +268,57 @@ setMethod(f = "diffusionCoefficient",
 	
 	return(result)
 }
+
+## Interpolates values between x-coordinates of xy at the coordinates given by q
+".interpolate" <- function(xy, q, interpolation=c("linear","constant")) {
+	interpolation <- match.arg(interpolation)
+	
+	xy <- rbind(xy, 0)
+	xy[nrow(xy),1] <- Inf
+	
+	## Find the interval in which each q value occurs
+	intervals <- rep(NA, length(q))
+	iv <- 0
+	for (i in seq_len(length(q))) {
+		iv.last <- iv
+		d.iv <- 1
+		## Exponential search to find upper bound for iv
+		while (iv < nrow(xy) && q[i] >= xy[iv+1,1]) {
+			iv <- min(iv+d.iv,nrow(xy))
+			
+			print(paste(iv.last, iv, d.iv, xy[iv,1], q[i]))
+			
+			d.iv <- d.iv*2
+		}
+		## The real iv is between iv.last and iv, find by binary search
+		while (iv-iv.last > 0) {
+			m <- ceiling((iv+iv.last)/2)
+			if (q[i] >= xy[m,1]) {
+				iv.last <- m
+			} else {
+				iv <- m-1
+			}
+		}
+		print(iv)
+		
+		intervals[i] <- iv
+	}
+	
+	res <- mapply(function(qe, iv) {
+		if (iv == 0 || iv == nrow(xy)) {
+			return(xy[nrow(xy),-1])
+		}
+		y1 <- xy[iv,-1]
+		if (interpolation=="constant") {
+			return(y1)
+		} else {
+			y2 <- xy[iv+1,-1]
+			alpha <- (qe- xy[iv,1]) / (xy[iv+1,1]-xy[iv,1])
+			
+			return((1-alpha)*y1 + alpha*y2)
+		}		
+	}, q, intervals)
+	names(res) <- q
+	res
+}
+interpolate <- .interpolate

@@ -27,8 +27,8 @@ setMethod(f = "velocity",
 				j.s <- max(which(object@timestamps >= t.s)[1], 2)
 				j.e <- max(which(object@timestamps >= t.e)[1], 2)
 
-	#			# Depending on the number of measurements between t.s and t.e,
-	#			# the variance is computed differently
+				# Depending on the number of measurements between t.s and t.e,
+				# the variance is computed differently
 				od <- object@diffusion[[1]]
 				if (j.s == j.e) {
 					# t.s and t.e are in the same bridge
