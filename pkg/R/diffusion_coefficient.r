@@ -20,7 +20,7 @@ setMethod(f = "diffusion<-",
 	} else if (is.null(names(diffusion)) && inherits(object, "MoveBBStack")) {
 		names(diffusion) <- levels(object@trackId)
 	}
-	
+
 	object@diffusion <- diffusion
 	object
 })

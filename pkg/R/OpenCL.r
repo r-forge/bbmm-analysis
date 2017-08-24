@@ -1,4 +1,4 @@
-".OpenCL_dev" <- NA
+".MoveBB_OpenCL_dev" <- NA
 ".OpenCL_kernels" <- NA
 
 # Selects an OpenCL device if possible, based on heuristics
@@ -23,7 +23,7 @@
 				break # no need to check less preferred dev types
 			}
 		}
-		.OpenCL_dev <<- dev # remember the selected device
+		.MoveBB_OpenCL_dev <<- dev # remember the selected device
 		cat("Selected OpenCL device ", ifelse(is.null(dev), "None", oclInfo(dev)$name), '\n', sep="")
 	}
 }
@@ -33,11 +33,11 @@
 ##	if (class(dev) != "clDeviceID") {
 ##		stop("dev must be an instance of clDeviceID, obtained from oclDevices()")
 ##	}
-#	unlockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+#	unlockBinding(".MoveBB_OpenCL_dev", loadNamespace(getPackageName()))
 #	unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
-#	.OpenCL_dev <<- dev
+#	.MoveBB_OpenCL_dev <<- dev
 #	.OpenCL_kernels <<- NA # kernels will need to be rebuilt for this device
-#	lockBinding(".OpenCL_dev", loadNamespace(getPackageName()))
+#	lockBinding(".MoveBB_OpenCL_dev", loadNamespace(getPackageName()))
 #	lockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
 #}
 
@@ -46,7 +46,7 @@
 	if (any(is.na(.OpenCL_kernels))) {
 		unlockBinding(".OpenCL_kernels", loadNamespace(getPackageName()))
 	
-		if (class(.OpenCL_dev) == "clDeviceID") {
+		if (class(.MoveBB_OpenCL_dev) == "clDeviceID") {
 			oldWd <- getwd()
 		
 			# Load all files with a '.cl' extension (case insensitive).
@@ -64,7 +64,7 @@
 			}, USE.NAMES=FALSE)
 			source <- paste(c("#pragma OPENCL EXTENSION cl_khr_fp64 : enable", source), collapse="\n\n")
 
-			.OpenCL_kernels <<- oclSimpleKernel(.OpenCL_dev, NA, source, "double") # Set precision here
+			.OpenCL_kernels <<- oclSimpleKernel(.MoveBB_OpenCL_dev, NA, source, "double") # Set precision here
 			
 			if (!is.null(oldWd)) setwd(oldWd)
 		} else {

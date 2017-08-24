@@ -46,10 +46,11 @@ segment.dscr <- function (tr, p=NA, n.dc=100) {
 		p <- log(nrow(tr))
 	}
 	
+	dc.alpha <- 3 ## Exponent for power-law distribution of values
 	dc.range <- range(sapply(1:(nrow(tr)-2), function(i) {
 		diffusionCoefficient(tr[i:(i+2)])
-	}))
-	dc.values <- seq(dc.range[1], dc.range[2], length.out=n.dc)	
+	}))^(1/dc.alpha)
+	dc.values <- seq(dc.range[1], dc.range[2], length.out=n.dc)^dc.alpha
 		
 	opt.IC             <- rep(Inf, nrow(tr))
 	opt.pred <- opt.dc <- rep(NA,  nrow(tr))
