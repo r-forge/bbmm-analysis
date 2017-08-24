@@ -4,7 +4,7 @@
 	
 	# Set the default number of processes to use for parallel computations
 	if (is.null(options("mc.cores")$mc.cores)) {
-		options(mc.cores=detectCores(logical=TRUE))
+		options(mc.cores=parallel::detectCores(logical=TRUE))
 	}
 }
 
