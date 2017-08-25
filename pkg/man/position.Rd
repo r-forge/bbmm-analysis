@@ -34,14 +34,14 @@ An array indexed by ID, parameter name, time.
 }
 \examples{
 data("vervet_monkeys", package="moveBB")
-	
+
 position(monkey.tr, as.POSIXct(c("2011-01-19 08:30:00")))
 
-# , , 1295422200
-#
-#           x       y      var
-# BD 322487.6 6900484 1133.653
-# NH 323012.9 6900720 1192.534
+## , , 1295422200
+##
+##           x       y      var
+## BD 322487.6 6900484 1133.653
+## NH 323012.9 6900720 1192.534
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

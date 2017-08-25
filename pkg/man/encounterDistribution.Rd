@@ -65,16 +65,17 @@ There seems to be some problem with the result being transposed, this needs furt
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-# Define grid lines: equally spaced between the min and max coordinate in monkey.tr
-xlim <- range(unlist(sapply(monkey.tr, function(b) { b$x })), na.rm=TRUE)
+## Define grid lines: equally spaced between the min and max coordinate in monkey.tr
+#TODO: define from monkey.tr@extent
+xlim <- range(monkey.data$X, na.rm=TRUE)
 xc <- seq(xlim[1], xlim[2], length.out=20)
 
-ylim <- range(unlist(sapply(monkey.tr, function(b) { b$y })), na.rm=TRUE)
+ylim <- range(monkey.data$Y, na.rm=TRUE)
 yc <- seq(ylim[1], ylim[2], length.out=20)
 
-# Compute the UD and plot the result for one ID
-ud <- encounterDistribution(monkey.tr, 100, xc=xc, yc=yc)
-image(ud[["BD","NH"]])
+## Compute the UD and plot the result for one ID
+#ud <- encounterDistribution(monkey.tr, 100, xc=xc, yc=yc)
+#image(ud[["BD","NH"]])
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

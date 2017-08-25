@@ -28,11 +28,11 @@ A list of \code{\linkS4class{SpatialPolygons}} as defined in package \code{sp}. 
 data("vervet_monkeys", package="moveBB")
 
 ud <- utilizationDistribution(monkey.tr)
-cp <- contourPolygons(ud, levels=c(0.95, 0.99))
-str(cp[[1]])
+#cp <- contourPolygons(ud, levels=c(0.95, 0.99))
+#str(cp[[1]])
 
-# Draw the home range for the first animal
-plot(cp[[1]], col=1:2)
+## Draw the home range for the first animal
+#plot(cp[[1]], col=1:2)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

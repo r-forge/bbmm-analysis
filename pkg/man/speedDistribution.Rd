@@ -39,9 +39,9 @@ the coordinates computed from \code{tr}.
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-# Compute the speed distribution and plot the result
-sd <- speedDistribution(monkey.tr)
-image(sd[[1]]) # Plot only the distribution of the first entity
+## Compute the speed distribution and plot the result
+#sd <- speedDistribution(monkey.tr)
+#image(sd[[1]]) # Plot only the distribution of the first entity
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

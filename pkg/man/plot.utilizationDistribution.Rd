@@ -43,14 +43,14 @@ If \code{col} is a list, it is assumed to contain one element for each UD to plo
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-# Compute the UD and plot the result for one ID
+## Compute the UD and plot the result for one ID
 ud <- utilizationDistribution(monkey.tr)
 plot(ud)
 
-# Specify nicer colours
+## Specify nicer colours
 plot(ud, col=c("red","green"))
-# Add a contour to the existing plot in the same colours
-contour(ud, col=c("red","green"), add=TRUE)
+## Add a contour to the existing plot in the same colours
+#contour(ud, col=c("red","green"), add=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

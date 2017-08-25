@@ -29,7 +29,7 @@ A \code{data.frame} containing the statistics for each relocation, or a copy of 
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-statistics(monkey.tr)
+#statistics(monkey.tr)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

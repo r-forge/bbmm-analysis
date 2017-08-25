@@ -66,18 +66,18 @@ the value of \code{d} or \code{p} and the time.
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-# Compute the distance at two distinct times
-distance(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+## Compute the distance at two distinct times
+#distance(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 
-# See whether an encounter occurs at the 50m or 100m thesholds
-encounter(c(10, 100), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+## See whether an encounter occurs at the 50m or 100m thesholds
+#encounter(c(10, 100), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 
-# Compute when there are encounters
-ei <- encounterIntervals(100, monkey.tr)
-ei[["BD","NH"]]
+## Compute when there are encounters
+#ei <- encounterIntervals(100, monkey.tr)
+#ei[["BD","NH"]]
 
-# Compute the 5th and 95th percentile of the distance at two distinct times
-qdistance(c(0.05, 0.95), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
+## Compute the 5th and 95th percentile of the distance at two distinct times
+#qdistance(c(0.05, 0.95), monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

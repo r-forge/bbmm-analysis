@@ -69,12 +69,12 @@ a matrix, indexed by the coordinates specified in \code{xc} and \code{yc}.
 data("vervet_monkeys", package="moveBB")
 
 # Compute the UD and plot the result
-ud <- utilizationDistribution(monkey.tr, byburst=TRUE)
-plot(ud)
+#ud <- utilizationDistribution(monkey.tr, byburst=TRUE)
+#plot(ud)
 
 # Convert to one UD for each group
-ud <- utilizationDistribution.byID(ud)
-plot(ud)
+#ud <- utilizationDistribution.byID(ud)
+#plot(ud)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

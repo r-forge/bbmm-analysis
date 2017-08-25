@@ -62,13 +62,13 @@ the two IDs and the movement model. The entries in the array are again of class
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
-barplot(ed)
+#ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
+#barplot(ed)
 
-barplot(encounterDurationById(ed))
+#barplot(encounterDurationById(ed))
 
 # This one has the same result, but needs to recompute everything
-barplot(encounterDuration(monkey.tr, 100))
+#barplot(encounterDuration(monkey.tr, 100))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

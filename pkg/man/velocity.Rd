@@ -32,8 +32,8 @@ Returns a three dimensional array indexed by ID in the trajectory, variable name
 \examples{
 data("vervet_monkeys", package="moveBB")
 
-# Compute the velocity distribution parameters over two half-hour intervals
-velocity(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
+## Compute the velocity distribution parameters over two half-hour intervals
+#velocity(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
