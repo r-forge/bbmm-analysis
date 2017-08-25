@@ -33,7 +33,7 @@ An array indexed by ID, parameter name, time.
 \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 	
 position(monkey.tr, as.POSIXct(c("2011-01-19 08:30:00")))
 

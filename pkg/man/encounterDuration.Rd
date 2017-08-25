@@ -60,7 +60,7 @@ the two IDs and the movement model. The entries in the array are again of class
 \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 ed <- encounterDuration(monkey.tr, 100, byburst=TRUE)
 barplot(ed)

@@ -41,7 +41,7 @@ If \code{col} is a list, it is assumed to contain one element for each UD to plo
 \code{\link{utilizationDistribution}}, \code{\link{SpatialPolygons}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the UD and plot the result for one ID
 ud <- utilizationDistribution(monkey.tr)

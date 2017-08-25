@@ -66,7 +66,7 @@ a matrix, indexed by the coordinates specified in \code{xc} and \code{yc}.
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the UD and plot the result
 ud <- utilizationDistribution(monkey.tr, byburst=TRUE)

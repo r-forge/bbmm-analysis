@@ -63,7 +63,7 @@ specify a sufficiently small grid or use a larger time step.
 There seems to be some problem with the result being transposed, this needs further investigation. Until then, you can plot the transpose of the result using \code{image(t(ud[["BD","NH"]]))}.
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Define grid lines: equally spaced between the min and max coordinate in monkey.tr
 xlim <- range(unlist(sapply(monkey.tr, function(b) { b$x })), na.rm=TRUE)

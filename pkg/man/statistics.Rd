@@ -27,7 +27,7 @@ A \code{data.frame} containing the statistics for each relocation, or a copy of 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 statistics(monkey.tr)
 }

@@ -25,7 +25,7 @@ A list of \code{\linkS4class{SpatialPolygons}} as defined in package \code{sp}. 
 \code{\link{utilizationDistribution}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 ud <- utilizationDistribution(monkey.tr)
 cp <- contourPolygons(ud, levels=c(0.95, 0.99))

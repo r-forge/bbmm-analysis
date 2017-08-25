@@ -42,7 +42,7 @@ The speed at a time \eqn{t} is defined as the absolute value of the \code{\link{
 \code{\link{velocity}}, \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the (linear model) speed over two half-hour intervals
 v <- speed(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)

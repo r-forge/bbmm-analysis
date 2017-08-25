@@ -64,7 +64,7 @@ the value of \code{d} or \code{p} and the time.
 \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the distance at two distinct times
 distance(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")))

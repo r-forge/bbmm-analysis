@@ -37,7 +37,7 @@ the coordinates computed from \code{tr}.
 \code{\link{velocity}}, \code{\link{speed}}, \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the speed distribution and plot the result
 sd <- speedDistribution(monkey.tr)

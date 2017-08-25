@@ -43,7 +43,7 @@ Systems}, 119--128.
 \code{\link{velocity}}, \code{\link{bbtraj}}
 }
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 
 # Compute the (linear model) direction over two half-hour intervals
 d <- direction(monkey.tr, as.POSIXct(c("2011-01-18 15:15:15", "2011-01-19 16:30:00")), 1800)

@@ -28,7 +28,7 @@ Otherwise, you may specify the labels yourself in the row names of \code{height}
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \examples{
-data("vervet_monkeys", package="movementAnalysis")
+data("vervet_monkeys", package="moveBB")
 	
 ed <- encounterDuration(monkey.tr, 100, groupBy="GroupID")
 barplot(ed)
