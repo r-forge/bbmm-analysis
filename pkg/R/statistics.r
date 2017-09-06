@@ -10,7 +10,7 @@ setMethod("statistics",
     angle <- mapply(atan2, dp[,2], dp[,1]) #signature is atan2(y,x)
 
 	data <- data.frame(
-				dt=as.difftime(c(diff(object@timestamps), NA), units="secs"),
+				dt=as.difftime(c(as.numeric(diff(object@timestamps), units="secs"), NA), units="secs"),
 				dx=dp[,1],
 				dy=dp[,2],
 				dist=apply(dp^2, 1, function(d) { sqrt(sum(d)) }),
